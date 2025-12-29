@@ -19,14 +19,14 @@ const Index = () => {
   const currentData =
     selectedMonth !== null
       ? {
-        revenue: financialData[selectedMonth].revenue,
-        expenses: financialData[selectedMonth].expenses,
-        investments: financialData[selectedMonth].investments,
-        balance:
-          financialData[selectedMonth].revenue -
-          financialData[selectedMonth].expenses -
-          financialData[selectedMonth].investments,
-      }
+          revenue: financialData[selectedMonth].revenue,
+          expenses: financialData[selectedMonth].expenses,
+          investments: financialData[selectedMonth].investments,
+          balance:
+            financialData[selectedMonth].revenue -
+            financialData[selectedMonth].expenses -
+            financialData[selectedMonth].investments,
+        }
       : annualTotals;
 
   return (
@@ -38,7 +38,6 @@ const Index = () => {
         <div className="space-y-8">
           {/* Header */}
           <DashboardHeader selectedMonth={selectedMonth} />
-
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -72,7 +71,6 @@ const Index = () => {
             />
           </div>
 
-
           {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <RevenueExpenseChart selectedMonth={selectedMonth} />
@@ -88,9 +86,7 @@ const Index = () => {
           {/* Charts Row 2 */}
           <CategoryStackedChart selectedMonth={selectedMonth} selectedCategory={selectedCategory} />
 
-
-
-          {/* Category Table */}
+          {/* CategoryTable */}
           <CategoryTable selectedMonth={selectedMonth} />
         </div>
 
