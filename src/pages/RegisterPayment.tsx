@@ -2,7 +2,6 @@ import * as React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,34 +45,12 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 
-import {
-  useRequests,
-  Category,
-  Bank,
-  Merchant
-} from "@/hooks/use-requests";
+import { useRequests } from "@/hooks/use-requests";
+import { PaymentSchema, PaymentFormValues } from "@/models/schemas/PaymentSchema";
+import { Category } from "@/models/Category";
+import { Bank } from "@/models/Bank";
+import { Merchant } from "@/models/Merchant";
 import { Spinner } from "@/components/ui/spinner";
-
-const formSchema = z.object({
-  title: z.string().min(1, "O título é obrigatório"),
-  date: z.date({
-    required_error: "A data é obrigatória",
-  }),
-  amount: z.coerce.number().min(0.01, "O valor deve ser maior que zero"),
-  paymentMethod: z.enum(["pix", "credit_card", "debit_card", "other"], {
-    required_error: "Selecione um método de pagamento",
-  }),
-  bankId: z.string().refine((val) => val !== "none" && val !== "", {
-    message: "Selecione um banco válido",
-  }).refine((val) => {
-    // Simple UUID validation regex
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(val);
-  }, { message: "Selecione um banco válido" }),
-  categoryId: z.string().optional(),
-});
-
-// Interfaces imported from hook
 
 const RegisterPayment = () => {
   const api = useRequests();
@@ -99,8 +76,8 @@ const RegisterPayment = () => {
     return () => clearTimeout(timer);
   }, [merchantSearch]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<PaymentFormValues>({
+    resolver: zodResolver(PaymentSchema),
     defaultValues: {
       title: "",
       amount: 0,
@@ -122,7 +99,7 @@ const RegisterPayment = () => {
     queryFn: api.getBanks,
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: PaymentFormValues) {
     setIsLoading(true);
     try {
       await api.createPayment({
