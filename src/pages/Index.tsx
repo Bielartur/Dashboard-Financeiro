@@ -1,33 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { SummaryCard } from '@/components/dashboard/SummaryCard';
-import { MonthFilter } from '@/components/dashboard/MonthFilter';
 import { RevenueExpenseChart } from '@/components/dashboard/RevenueExpenseChart';
-import { CategoryStackedChart } from '@/components/dashboard/CategoryStackedChart';
+import { MonthlyCategoryChart } from '@/components/dashboard/MonthlyCategoryChart';
+import { CategoryEvolutionChart } from '@/components/dashboard/CategoryEvolutionChart';
 import { CategoryDonutChart } from '@/components/dashboard/CategoryDonutChart';
 import { CategoryTable } from '@/components/dashboard/CategoryTable';
-import { financialData, getAnnualTotals, CategoryData } from '@/data/financialData';
+import { financialDataByYear } from '@/data/financialData';
+import { CategoryData } from '@/models/Financial';
 import { TrendingUp, TrendingDown, PiggyBank, Wallet } from 'lucide-react';
-import { CategoryFilter } from '@/components/dashboard/CategoryFilter';
 
 const Index = () => {
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(new Date().getMonth());
   const [selectedCategory, setSelectedCategory] = useState<keyof CategoryData | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
-  const annualTotals = getAnnualTotals();
+  const currentYearData = financialDataByYear[selectedYear] || financialDataByYear[new Date().getFullYear()];
+
+  // Update selected month when year changes
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    if (selectedYear === currentYear) {
+      setSelectedMonth(new Date().getMonth());
+    } else {
+      setSelectedMonth(0); // Default to January for other years
+    }
+  }, [selectedYear]);
 
   const currentData =
     selectedMonth !== null
       ? {
-          revenue: financialData[selectedMonth].revenue,
-          expenses: financialData[selectedMonth].expenses,
-          investments: financialData[selectedMonth].investments,
-          balance:
-            financialData[selectedMonth].revenue -
-            financialData[selectedMonth].expenses -
-            financialData[selectedMonth].investments,
-        }
-      : annualTotals;
+        revenue: currentYearData[selectedMonth].revenue,
+        expenses: currentYearData[selectedMonth].expenses,
+        investments: currentYearData[selectedMonth].investments,
+        balance:
+          currentYearData[selectedMonth].revenue -
+          currentYearData[selectedMonth].expenses -
+          currentYearData[selectedMonth].investments,
+      }
+      : { revenue: 0, expenses: 0, investments: 0, balance: 0 }; // Fallback (should not happen with default month)
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,7 +48,11 @@ const Index = () => {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
           {/* Header */}
-          <DashboardHeader selectedMonth={selectedMonth} />
+          <DashboardHeader
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onSelectYear={setSelectedYear}
+          />
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -73,21 +88,29 @@ const Index = () => {
 
           {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <RevenueExpenseChart selectedMonth={selectedMonth} />
-            <CategoryDonutChart selectedMonth={selectedMonth} />
+            <RevenueExpenseChart selectedMonth={selectedMonth} data={currentYearData} />
+            <CategoryDonutChart selectedMonth={selectedMonth} data={currentYearData} />
           </div>
 
-          {/* Month Filter */}
-          <MonthFilter selectedMonth={selectedMonth} onSelectMonth={setSelectedMonth} />
-
-          {/* Category Filter */}
-          <CategoryFilter selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
-          
           {/* Charts Row 2 */}
-          <CategoryStackedChart selectedMonth={selectedMonth} selectedCategory={selectedCategory} />
+          <MonthlyCategoryChart
+            selectedMonth={selectedMonth}
+            data={currentYearData}
+            selectedYear={selectedYear}
+            onSelectMonth={setSelectedMonth}
+          />
+
+
+          {/* Category Annual Evolution */}
+          <CategoryEvolutionChart
+            selectedCategory={selectedCategory}
+            data={currentYearData}
+            selectedYear={selectedYear}
+            onSelectCategory={setSelectedCategory}
+          />
 
           {/* CategoryTable */}
-          <CategoryTable selectedMonth={selectedMonth} />
+          <CategoryTable selectedMonth={selectedMonth} data={currentYearData} />
         </div>
 
         {/* Footer */}

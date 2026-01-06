@@ -22,11 +22,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 
 import { useRequests } from "@/hooks/use-requests";
 
-const formSchema = z.object({
-  name: z.string().min(1, "O nome do banco é obrigatório"),
-  color_hex: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida"),
-  logo_url: z.string().url("URL do logo inválida").optional().or(z.literal("")),
-});
+import { BankSchema, BankFormValues } from "@/models/schemas/BankSchema";
 
 const RegisterBank = () => {
   const api = useRequests();
@@ -43,8 +39,8 @@ const RegisterBank = () => {
       .replace(/\s+/g, "_");
   };
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<BankFormValues>({
+    resolver: zodResolver(BankSchema),
     defaultValues: {
       name: "",
       color_hex: "#000000",
@@ -52,7 +48,7 @@ const RegisterBank = () => {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: BankFormValues) {
     setIsLoading(true);
     try {
       await api.createBank({

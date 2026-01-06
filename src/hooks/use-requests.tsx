@@ -2,53 +2,13 @@ import { apiRequest } from "../utils/apiRequests";
 
 // --- Interfaces ---
 
-export interface Category {
-  id: string;
-  name: string;
-}
+// --- Interfaces ---
+import { Category } from "@/models/Category";
+import { Bank, BankCreate } from "@/models/Bank";
+import { Merchant } from "@/models/Merchant";
+import { PaymentCreate, PaymentResponse, PaymentFilters } from "@/models/Payment";
 
-export interface Bank {
-  id: string;
-  name: string;
-}
-
-export interface Merchant {
-  id: string;
-  name: string;
-  categoryId?: string;
-  userId?: string;
-}
-
-export interface PaymentCreate {
-  title: string;
-  date: string;
-  amount: number;
-  paymentMethod: "pix" | "credit_card" | "debit_card" | "other";
-  bankId: string;
-  categoryId?: string | null;
-}
-
-export interface BankCreate {
-  name: string;
-  color_hex: string;
-  logo_url: string;
-  slug: string;
-  is_active: boolean;
-}
-
-export interface PaymentResponse {
-  id: string;
-  title: string;
-  date: string;
-  amount: number;
-  paymentMethod: {
-    value: string;
-    displayName: string;
-  };
-  bank?: Bank;
-  merchant?: Merchant;
-  category?: Category;
-}
+export type { Category, Bank, BankCreate, Merchant, PaymentCreate, PaymentResponse, PaymentFilters };
 
 // --- Requests ---
 
@@ -74,17 +34,6 @@ const searchMerchants = async (query: string) => {
 };
 
 // Filter interface
-export interface PaymentFilters {
-  query?: string;
-  limit?: number;
-  paymentMethod?: string;
-  categoryId?: string;
-  bankId?: string;
-  startDate?: Date;
-  endDate?: Date;
-  minAmount?: number;
-  maxAmount?: number;
-}
 
 const searchPayments = async (filters: PaymentFilters) => {
   const queryParams = new URLSearchParams();

@@ -1,14 +1,18 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, Calendar as CalendarIcon, Landmark, Filter, X } from "lucide-react";
+import { ArrowLeft, Search, Calendar as CalendarIcon, Landmark, Filter } from "lucide-react";
+import { ClearFilterButton } from "@/components/ClearFilterButton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useRequests, PaymentResponse, Category, Bank } from "@/hooks/use-requests";
+import { useRequests } from "@/hooks/use-requests";
+import { PaymentResponse } from "@/models/Payment";
+import { Category } from "@/models/Category";
+import { Bank } from "@/models/Bank";
 import { Spinner } from "@/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -119,10 +123,7 @@ const SearchPayments = () => {
             <Filter className="h-4 w-4 text-primary" />
             <h2 className="font-semibold text-sm">Filtros</h2>
             {(paymentMethod !== "all" || categoryId !== "all" || bankId !== "all" || startDate || endDate || minAmount || maxAmount || searchTerm) && (
-              <Button variant="ghost" size="sm" className="h-6 ml-auto text-xs text-muted-foreground hover:text-destructive" onClick={clearFilters}>
-                <X className="h-3 w-3 mr-1" />
-                Limpar filtros
-              </Button>
+              <ClearFilterButton onClick={clearFilters} label="Limpar filtros" className="ml-auto" />
             )}
           </div>
 

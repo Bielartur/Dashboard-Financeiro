@@ -1,23 +1,23 @@
 import {
-  financialData,
   getAnnualCategoryTotals,
   categoryColors,
   categoryLabels,
   formatCurrency,
   formatPercent,
-  CategoryData,
 } from '@/data/financialData';
+import { CategoryData, MonthlyData } from '@/models/Financial';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface CategoryDonutChartProps {
   selectedMonth: number | null;
+  data: MonthlyData[];
 }
 
-export function CategoryDonutChart({ selectedMonth }: CategoryDonutChartProps) {
+export function CategoryDonutChart({ selectedMonth, data }: CategoryDonutChartProps) {
   const categoryTotals =
     selectedMonth !== null
-      ? financialData[selectedMonth].categories
-      : getAnnualCategoryTotals();
+      ? data[selectedMonth].categories
+      : getAnnualCategoryTotals(data);
 
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
@@ -50,7 +50,7 @@ export function CategoryDonutChart({ selectedMonth }: CategoryDonutChartProps) {
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
       <h3 className="text-lg font-semibold text-foreground mb-6">
         {selectedMonth !== null
-          ? `Distribuição - ${financialData[selectedMonth].month}`
+          ? `Distribuição - ${data[selectedMonth].month}`
           : 'Distribuição Anual por Categoria'}
       </h3>
       <div className="flex flex-col lg:flex-row items-center gap-6">
