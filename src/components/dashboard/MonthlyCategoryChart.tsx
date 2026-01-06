@@ -1,13 +1,12 @@
 import { useMemo } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  financialData,
   categoryColors,
   categoryLabels,
   formatCurrency,
-  CategoryData,
 } from '@/data/financialData';
+import { CategoryData, MonthlyData } from '@/models/Financial';
 import {
-  ComposedChart,
   BarChart,
   Bar,
   XAxis,
@@ -15,14 +14,13 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
-  Scatter,
-  ZAxis,
 } from 'recharts';
 
-interface CategoryStackedChartProps {
+interface MonthlyCategoryChartProps {
   selectedMonth: number | null;
-  selectedCategory: keyof CategoryData | null;
+  data: MonthlyData[];
+  selectedYear: number;
+  onSelectMonth: (month: number | null) => void;
 }
 
 interface CategoryChartItem {
@@ -36,19 +34,24 @@ interface CategoryChartItem {
   fill: string;
 }
 
-export function CategoryStackedChart({ selectedMonth, selectedCategory }: CategoryStackedChartProps) {
+export function MonthlyCategoryChart({ selectedMonth, data, selectedYear, onSelectMonth }: MonthlyCategoryChartProps) {
   const categories = Object.keys(categoryLabels) as Array<keyof CategoryData>;
 
   const isMonthSelected = selectedMonth !== null;
-  const isCategorySelected = selectedCategory !== null;
 
-  // Data for "Year View" (when no month is selected)
-  const monthlyChartData = financialData.map((month) => ({
-    name: month.monthShort,
-    ...month.categories,
-    // Add specific category value for easier access if needed
-    ...(selectedCategory ? { value: month.categories[selectedCategory] } : {}),
-  }));
+  // Calculate available months based on current date
+  const availableMonths = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const currentMonthIndex = new Date().getMonth();
+
+    if (selectedYear < currentYear) {
+      return data; // All months available
+    } else if (selectedYear === currentYear) {
+      return data.slice(0, currentMonthIndex + 1); // Only up to current month
+    } else {
+      return []; // No months available for future years
+    }
+  }, [selectedYear, data]);
 
   // Calculate average for each category (excluding selected month)
   const categoryAverages = useMemo(() => {
@@ -56,13 +59,13 @@ export function CategoryStackedChart({ selectedMonth, selectedCategory }: Catego
 
     const averages = {} as Record<keyof CategoryData, number>;
     categories.forEach((category) => {
-      const otherMonthsValues = financialData
+      const otherMonthsValues = data
         .filter((_, index) => index !== selectedMonth)
         .map((month) => month.categories[category]);
       averages[category] = otherMonthsValues.reduce((a, b) => a + b, 0) / otherMonthsValues.length;
     });
     return averages;
-  }, [selectedMonth, isMonthSelected]);
+  }, [selectedMonth, isMonthSelected, data]);
 
   // Build category chart data with base, excess, and savings
   const categoryChartData: CategoryChartItem[] = useMemo(() => {
@@ -70,7 +73,7 @@ export function CategoryStackedChart({ selectedMonth, selectedCategory }: Catego
 
     return categories
       .map((category) => {
-        const value = financialData[selectedMonth].categories[category];
+        const value = data[selectedMonth].categories[category];
         const average = categoryAverages[category];
         const isAboveAverage = value > average;
         const isBelowAverage = value < average;
@@ -88,42 +91,6 @@ export function CategoryStackedChart({ selectedMonth, selectedCategory }: Catego
       })
       .sort((a, b) => b.value - a.value);
   }, [selectedMonth, isMonthSelected, categoryAverages]);
-
-  const CustomTooltipStacked = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
-      return (
-        <div className="glass-card rounded-lg p-4 border border-border/50 shadow-xl max-h-80 overflow-y-auto">
-          <p className="text-sm font-semibold text-foreground mb-3">{label}</p>
-          <div className="space-y-1.5">
-            {payload
-              .sort((a: any, b: any) => b.value - a.value)
-              .map((entry: any, index: number) => (
-                <div key={index} className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: entry.color }}
-                    />
-                    <span className="text-xs text-muted-foreground">{entry.name}</span>
-                  </div>
-                  <span className="text-xs font-medium text-foreground">
-                    {formatCurrency(entry.value)}
-                  </span>
-                </div>
-              ))}
-          </div>
-          <div className="mt-3 pt-3 border-t border-border">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-muted-foreground">Total</span>
-              <span className="text-sm font-bold text-foreground">{formatCurrency(total)}</span>
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const CustomTooltipCategory = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -269,31 +236,33 @@ export function CategoryStackedChart({ selectedMonth, selectedCategory }: Catego
 
   return (
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '300ms' }}>
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-        <h3 className="text-lg font-semibold text-foreground">
-          {isMonthSelected
-            ? `Gastos por Categoria - ${financialData[selectedMonth].month}`
-            : isCategorySelected
-              ? `Evolução Anual - ${categoryLabels[selectedCategory]}`
-              : 'Gastos Mensais por Categoria'}
-        </h3>
-        {isMonthSelected && (
-          <div className="flex items-center gap-4 text-xs flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-expense" />
-              <span className="text-muted-foreground">Acima da média</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-income opacity-60 border border-dashed border-income" />
-              <span className="text-muted-foreground">Economia</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-4 h-0.5 bg-foreground opacity-70" style={{ borderTop: '2px dashed' }} />
-              <span className="text-muted-foreground">Média</span>
-            </div>
-          </div>
-        )}
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+        <div>
+          <span className="text-lg font-bold text-foreground mb-1">Relatório de gastos por mês</span>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            {selectedMonth !== null ? `${data[selectedMonth].month} de ${selectedYear}` : `Ano de ${selectedYear}`}
+          </h3>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Select
+            value={selectedMonth !== null ? selectedMonth.toString() : ""}
+            onValueChange={(val) => onSelectMonth(parseInt(val))}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecione o mês" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableMonths.map((month, index) => (
+                <SelectItem key={month.month} value={index.toString()}>
+                  {month.month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
       <div className="h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
           {isMonthSelected ? (
@@ -332,83 +301,9 @@ export function CategoryStackedChart({ selectedMonth, selectedCategory }: Catego
               />
             </BarChart>
           ) : (
-            isCategorySelected ? (
-              <BarChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis
-                  dataKey="name"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip
-                  cursor={{ fill: 'hsl(var(--muted)/0.1)' }}
-                  content={({ active, payload, label }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="glass-card rounded-lg p-3 border border-border/50 shadow-xl">
-                          <p className="text-sm font-semibold text-foreground mb-1">{label}</p>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-2.5 h-2.5 rounded-full"
-                              style={{ backgroundColor: payload[0].color }}
-                            />
-                            <span className="text-sm text-foreground">
-                              {formatCurrency(payload[0].value as number)}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar
-                  dataKey={selectedCategory}
-                  name={categoryLabels[selectedCategory]}
-                  fill={categoryColors[selectedCategory]}
-                  radius={[4, 4, 0, 0]}
-                  animationDuration={1000}
-                />
-              </BarChart>
-            ) : (
-              <BarChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                <XAxis
-                  dataKey="name"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip content={<CustomTooltipStacked />} />
-                {categories.map((category) => (
-                  <Bar
-                    key={category}
-                    dataKey={category}
-                    name={categoryLabels[category]}
-                    stackId="a"
-                    fill={categoryColors[category]}
-                    radius={[0, 0, 0, 0]}
-                  />
-                ))}
-              </BarChart>
-            )
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              Selecione um mês para visualizar o relatório.
+            </div>
           )}
         </ResponsiveContainer>
       </div>

@@ -1,4 +1,5 @@
 import { financialData, formatCurrency } from '@/data/financialData';
+import { MonthlyData } from '@/models/Financial';
 import {
   LineChart,
   Line,
@@ -12,10 +13,11 @@ import {
 
 interface RevenueExpenseChartProps {
   selectedMonth: number | null;
+  data: MonthlyData[];
 }
 
-export function RevenueExpenseChart({ selectedMonth }: RevenueExpenseChartProps) {
-  const chartData = financialData.map((month) => ({
+export function RevenueExpenseChart({ selectedMonth, data }: RevenueExpenseChartProps) {
+  const chartData = data.map((month) => ({
     name: month.monthShort,
     receita: month.revenue,
     gastos: month.expenses,
@@ -41,7 +43,7 @@ export function RevenueExpenseChart({ selectedMonth }: RevenueExpenseChartProps)
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
       <h3 className="text-lg font-semibold text-foreground mb-6">
         {selectedMonth !== null
-          ? `Receita vs Gastos - ${financialData[selectedMonth].month}`
+          ? `Receita vs Gastos - ${data[selectedMonth].month} `
           : 'Evolução Mensal: Receita vs Gastos'}
       </h3>
       <div className="h-[300px]">
@@ -60,7 +62,7 @@ export function RevenueExpenseChart({ selectedMonth }: RevenueExpenseChartProps)
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => `${(value / 1000).toFixed(0)} k`}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend

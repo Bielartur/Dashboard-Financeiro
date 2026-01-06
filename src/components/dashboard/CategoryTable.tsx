@@ -5,8 +5,8 @@ import {
   categoryLabels,
   formatCurrency,
   formatPercent,
-  CategoryData,
 } from '@/data/financialData';
+import { CategoryData, MonthlyData } from '@/models/Financial';
 import {
   Table,
   TableBody,
@@ -19,13 +19,14 @@ import { TrendingDown, TrendingUp } from 'lucide-react';
 
 interface CategoryTableProps {
   selectedMonth: number | null;
+  data: MonthlyData[];
 }
 
-export function CategoryTable({ selectedMonth }: CategoryTableProps) {
+export function CategoryTable({ selectedMonth, data }: CategoryTableProps) {
   const categoryTotals =
     selectedMonth !== null
-      ? financialData[selectedMonth].categories
-      : getAnnualCategoryTotals();
+      ? data[selectedMonth].categories
+      : getAnnualCategoryTotals(data);
 
   const total = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
 
@@ -45,7 +46,7 @@ export function CategoryTable({ selectedMonth }: CategoryTableProps) {
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '500ms' }}>
       <h3 className="text-lg font-semibold text-foreground mb-6">
         {selectedMonth !== null
-          ? `Detalhamento - ${financialData[selectedMonth].month}`
+          ? `Detalhamento - ${data[selectedMonth].month}`
           : 'Detalhamento Anual por Categoria'}
       </h3>
       <div className="overflow-x-auto">
