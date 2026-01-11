@@ -6,14 +6,15 @@ import { AdminTable, Column } from "../AdminTable";
 import { CreateBankModal } from "../banks/CreateBankModal";
 import { EditBankModal } from "../banks/EditBankModal";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { BankLogo } from "@/components/BankLogo";
 
 
 export function BankList() {
   const api = useRequests();
 
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingBank, setEditingBank] = useState<Bank | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,19 +38,11 @@ export function BankList() {
     try {
       await api.updateBank(id, data);
       await queryClient.invalidateQueries({ queryKey: ["banks"] });
-      toast({
-        variant: "success",
-        title: "Sucesso",
-        description: "Banco atualizado com sucesso!",
-      });
+      toast.success("Banco atualizado com sucesso!");
       setIsEditModalOpen(false);
     } catch (error) {
       console.error("Failed to update bank:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao atualizar banco.",
-      });
+      toast.error("Erro ao atualizar banco.");
     }
   };
 
@@ -64,19 +57,13 @@ export function BankList() {
     try {
       await api.deleteBank(deletingBank.id);
       await queryClient.invalidateQueries({ queryKey: ["banks"] });
-      toast({
-        variant: "success",
-        title: "Banco excluído",
+      toast.success("Banco excluído", {
         description: "O banco foi excluído com sucesso.",
       });
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error("Failed to delete bank:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao excluir banco.",
-      });
+      toast.error("Erro ao excluir banco.");
     } finally {
       setIsDeleting(false);
       setDeletingBank(null);
