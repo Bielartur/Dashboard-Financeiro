@@ -7,7 +7,7 @@ import { CategoryBadge } from "@/components/CategoryBadge";
 import { EditCategoryModal } from "./EditCategoryModal";
 import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
 import { CreateCategoryModal } from "./CreateCategoryModal";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface CategoryListProps {
   onAddClick?: () => void;
@@ -15,7 +15,6 @@ interface CategoryListProps {
 
 export function CategoryList({ onAddClick }: CategoryListProps) {
   const api = useRequests();
-  const { toast } = useToast();
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["categories"],
@@ -35,18 +34,10 @@ export function CategoryList({ onAddClick }: CategoryListProps) {
     try {
       await api.updateCategory(id, data);
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast({
-        variant: "success",
-        title: "Sucesso",
-        description: "Categoria atualizada com sucesso!",
-      });
+      toast.success("Categoria atualizada com sucesso!");
     } catch (error) {
       console.error("Failed to update category:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao atualizar categoria.",
-      });
+      toast.error("Erro ao atualizar categoria.");
     } finally {
       setEditingCategory(null);
     }
@@ -67,19 +58,13 @@ export function CategoryList({ onAddClick }: CategoryListProps) {
     try {
       await api.deleteCategory(deletingCategory.id);
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      toast({
-        variant: "success",
-        title: "Categoria excluída",
+      toast.success("Categoria excluída", {
         description: "A categoria foi excluída com sucesso.",
       });
       setIsDeleteModalOpen(false);
     } catch (error) {
       console.error("Failed to delete category:", error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao excluir categoria. Verifique se existem registros vinculados.",
-      });
+      toast.error("Erro ao excluir categoria. Verifique se existem registros vinculados.");
     } finally {
       setIsDeleting(false);
       setDeletingCategory(null);

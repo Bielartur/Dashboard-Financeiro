@@ -11,7 +11,7 @@ export default function AdminLayout() {
   const isBanksActive = location.pathname.includes('/banks');
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen w-full overflow-hidden bg-background flex">
       {/* Sidebar */}
       <aside className="w-64 border-r bg-card hidden md:flex flex-col">
         <div className="p-6 border-b">
@@ -71,9 +71,9 @@ export default function AdminLayout() {
         </header>
 
         {/* Content */}
-        <div className="p-6 flex-1 overflow-auto">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="animate-in fade-in-50 duration-300 slide-in-from-bottom-2">
+        <div className="p-6 flex-1 overflow-hidden">
+          <div className="h-full w-full max-w-5xl mx-auto">
+            <div className="h-full animate-in fade-in-50 duration-300 slide-in-from-bottom-2">
               <Outlet />
             </div>
           </div>
