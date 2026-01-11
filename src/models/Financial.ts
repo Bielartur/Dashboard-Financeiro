@@ -1,21 +1,33 @@
-export interface CategoryData {
-  alimentacao: number;
-  apartamento: number;
-  lazer: number;
-  outros: number;
-  pagamentos: number;
-  restaurante: number;
-  saude: number;
-  trabalho: number;
-  transporte: number;
-  vestuario: number;
+export interface CategoryMetric {
+  name: string;
+  slug: string;
+  colorHex: string;
+  type: 'income' | 'expense';
+  total: number;
+  average: number;
+  status: 'above_average' | 'below_average' | 'average';
 }
 
 export interface MonthlyData {
   month: string;
   monthShort: string;
+  year: number;
   revenue: number;
   expenses: number;
   investments: number;
-  categories: CategoryData;
+  balance: number;
+  categories: CategoryMetric[];
 }
+
+export interface DashboardSummary {
+  totalRevenue: number;
+  totalExpenses: number;
+  balance: number;
+  totalInvestments: number;
+}
+
+export interface DashboardResponse {
+  summary: DashboardSummary;
+  months: MonthlyData[];
+}
+

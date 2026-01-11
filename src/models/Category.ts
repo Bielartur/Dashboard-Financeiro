@@ -1,6 +1,7 @@
 export interface Category {
   id: string;
   name: string;
+  slug: string;
   colorHex: string;
   createdAt?: string;
   updatedAt?: string;

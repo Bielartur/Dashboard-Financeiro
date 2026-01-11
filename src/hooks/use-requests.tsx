@@ -5,8 +5,9 @@ import { Category, CategoryCreate, CategoryUpdate } from "@/models/Category";
 import { Bank, BankCreate, BankUpdate } from "@/models/Bank";
 import { Merchant } from "@/models/Merchant";
 import { PaymentCreate, PaymentResponse, PaymentFilters } from "@/models/Payment";
+import { DashboardResponse } from "@/models/Financial";
 
-export type { Category, CategoryCreate, CategoryUpdate, Bank, BankCreate, Merchant, PaymentCreate, PaymentResponse, PaymentFilters };
+export type { Category, CategoryCreate, CategoryUpdate, Bank, BankCreate, Merchant, PaymentCreate, PaymentResponse, PaymentFilters, DashboardResponse };
 
 // --- Requests ---
 
@@ -73,6 +74,12 @@ const deleteBank = async (id: string) => {
 };
 
 
+
+const getDashboard = async (year: string = 'last-12') => {
+  const queryYear = year === 'last-12' ? 'last-12' : year;
+  return await apiRequest<DashboardResponse>(`dashboard/?year=${queryYear}`, "GET");
+};
+
 // --- Hook Export ---
 
 export const useRequests = () => ({
@@ -87,4 +94,5 @@ export const useRequests = () => ({
   deleteBank,
   searchMerchants,
   searchPayments,
+  getDashboard,
 });
