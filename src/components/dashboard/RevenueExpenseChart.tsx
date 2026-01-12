@@ -1,5 +1,6 @@
 import { formatCurrency } from '@/data/financialData';
 import { MonthlyData } from '@/models/Financial';
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -17,11 +18,44 @@ interface RevenueExpenseChartProps {
 }
 
 export function RevenueExpenseChart({ selectedMonth, data }: RevenueExpenseChartProps) {
-  const chartData = data.map((month) => ({
-    name: month.monthShort,
-    receita: month.revenue,
-    gastos: month.expenses,
-  }));
+  const filledData = useMemo(() => {
+    if (data.length === 0) return [];
+
+    // Check if we are viewing a single year (all data points have same year)
+    // If so, we fill gaps for Jan-Dec.
+    const years = new Set(data.map(d => d.year));
+    if (years.size === 1) {
+      const year = data[0].year;
+      const filled = [];
+      const monthsShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+      for (let i = 0; i < 12; i++) {
+        const mShort = monthsShort[i];
+        const existing = data.find(d => d.monthShort === mShort && d.year === year);
+        if (existing) {
+          filled.push({
+            name: existing.monthShort,
+            receita: Number(existing.revenue),
+            gastos: Number(existing.expenses)
+          });
+        } else {
+          filled.push({
+            name: mShort,
+            receita: 0,
+            gastos: 0
+          });
+        }
+      }
+      return filled;
+    }
+
+    // For Multi-year or other cases, just return existing data (sparse)
+    return data.map((month) => ({
+      name: month.monthShort,
+      receita: Number(month.revenue),
+      gastos: Number(month.expenses),
+    }));
+  }, [data]);
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -42,13 +76,13 @@ export function RevenueExpenseChart({ selectedMonth, data }: RevenueExpenseChart
   return (
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '200ms' }}>
       <h3 className="text-lg font-semibold text-foreground mb-6">
-        {selectedMonth !== null
+        {selectedMonth !== null && data[selectedMonth]
           ? `Receita vs Gastos - ${data[selectedMonth].month} `
           : 'Evolução Mensal: Receita vs Gastos'}
       </h3>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <LineChart data={filledData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
             <XAxis
               dataKey="name"
@@ -63,6 +97,7 @@ export function RevenueExpenseChart({ selectedMonth, data }: RevenueExpenseChart
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `${(value / 1000).toFixed(0)} k`}
+              padding={{ top: 30 }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend
