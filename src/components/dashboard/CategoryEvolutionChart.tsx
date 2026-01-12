@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { formatPeriodLabel } from '@/utils/formatters';
 import { Badge } from "@/components/ui/badge";
@@ -70,18 +70,80 @@ export function CategoryEvolutionChart({
     }
   };
 
+  // Gap filling logic
+  const filledData = useMemo(() => {
+    if (data.length === 0) return [];
+
+    // Check if we are viewing a single year
+    const years = new Set(data.map(d => d.year));
+    if (years.size === 1) {
+      const year = data[0].year;
+      const filled = [];
+      const monthsShort = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+      // We need full months for the data object if we want to be consistent, but chart usually uses monthShort.
+      // The original code used `month.month` (full) for `fullMonth`.
+      // We need to map short to full manually if missing.
+      const monthsFull = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+
+      for (let i = 0; i < 12; i++) {
+        const mShort = monthsShort[i];
+        const existing = data.find(d => d.monthShort === mShort && d.year === year);
+        if (existing) {
+          filled.push(existing);
+        } else {
+          // Mock empty month
+          filled.push({
+            month: monthsFull[i],
+            monthShort: mShort,
+            year: year,
+            revenue: 0,
+            expenses: 0,
+            investments: 0,
+            balance: 0,
+            categories: []
+          });
+        }
+      }
+      return filled;
+    }
+    return data;
+  }, [data]);
+
+  useEffect(() => {
+    // Only set defaults if no categories are selected and we have data
+    if (selectedCategories.length === 0 && filledData.length > 0) {
+      const totals = new Map<string, number>();
+
+      filledData.forEach(month => {
+        month.categories?.forEach(cat => {
+          if (cat.type === 'expense') {
+            totals.set(cat.slug, (totals.get(cat.slug) || 0) + Number(cat.total));
+          }
+        });
+      });
+
+      const topCategories = Array.from(totals.entries())
+        .sort((a, b) => b[1] - a[1]) // Sort by total descending
+        .slice(0, 2)
+        .map(entry => entry[0]);
+
+      if (topCategories.length > 0) {
+        onSelectCategories(topCategories);
+      }
+    }
+  }, [filledData, onSelectCategories]); // Intentionally omitting selectedCategories to avoid fighting user clear action
+
   const chartData = useMemo(() => {
     if (selectedCategories.length === 0) return [];
 
     const currentYear = new Date().getFullYear();
     const currentMonthIndex = new Date().getMonth();
 
-    // Map over all available months
-    return data.map((month, index) => {
-      // Common logic for future handling
+    // Map over filledData
+    return filledData.map((month, index) => {
       const yearNum = selectedYear === 'last-12' ? -1 : parseInt(selectedYear);
-      // For last-12, all data is valid history/current. 
-      // For specific year, we might want to zero out future months.
+      // Logic relies on index 0=Jan for single year. `filledData` ensures this if single year.
+      // If multi-year (sparse), `index` is just position. Logic might be off for multi-year but 'last-12' usually implies past data anyway.
       const isFuture = selectedYear !== 'last-12' && yearNum === currentYear && index > currentMonthIndex;
 
       const monthData: any = {
@@ -90,13 +152,14 @@ export function CategoryEvolutionChart({
       };
 
       selectedCategories.forEach(catSlug => {
-        const catMetric = month.categories.find(c => c.slug === catSlug);
-        monthData[catSlug] = isFuture ? 0 : (catMetric?.total || 0);
+        // Need to check if categories exists (mock object has empty list)
+        const catMetric = month.categories?.find(c => c.slug === catSlug);
+        monthData[catSlug] = isFuture ? 0 : Number(catMetric?.total || 0);
       });
 
       return monthData;
     });
-  }, [selectedCategories, data, selectedYear]);
+  }, [selectedCategories, filledData, selectedYear]);
 
   return (
     <div className="glass-card rounded-xl p-6 animate-slide-up" style={{ animationDelay: '400ms' }}>
@@ -200,6 +263,7 @@ export function CategoryEvolutionChart({
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                padding={{ top: 30 }}
               />
               <Tooltip
                 cursor={{ stroke: 'hsl(var(--muted)/0.5)', strokeWidth: 1 }}

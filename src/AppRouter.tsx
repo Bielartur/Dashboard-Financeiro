@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
+import ImportPayments from "./pages/ImportPayments";
 import SearchPayments from "./pages/SearchPayments";
 import NotFound from "./pages/NotFound";
 import AdminLayout from "./layouts/AdminLayout";
@@ -12,6 +13,7 @@ export const AppRouter = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/search-payments" element={<SearchPayments />} />
+        <Route path="/import-payments" element={<ImportPayments />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="categories" replace />} />
           <Route path="categories" element={<CategoriesPage />} />

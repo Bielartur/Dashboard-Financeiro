@@ -38,15 +38,16 @@ import { Bank } from "@/models/Bank";
 import { Merchant } from "@/models/Merchant";
 import { BaseModal } from "@/components/admin/BaseModal";
 import { MerchantSelect } from "./MerchantSelect";
+import { PaymentResponse } from "@/models/Payment";
 import { CategoryCombobox } from "@/components/CategoryCombobox";
 
-interface CreatePaymentModalProps {
+interface EditPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void;
+  payment: PaymentResponse;
 }
 
-export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePaymentModalProps) {
+export function EditPaymentModal({ isOpen, onClose, payment }: EditPaymentModalProps) {
   const api = useRequests();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -68,23 +69,36 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(PaymentSchema),
     defaultValues: {
-      title: "",
-      amount: 0,
-      bankId: "",
-      categoryId: "",
-      paymentMethod: "credit_card",
-      date: new Date(),
+      title: payment.title,
+      amount: Number(payment.amount),
+      bankId: payment.bank?.id || "",
+      categoryId: payment.category?.id || "none", // Handle null category
+      paymentMethod: (payment.paymentMethod?.value || "other") as "pix" | "credit_card" | "debit_card" | "other",
+      date: new Date(payment.date),
     },
   });
 
-  // Form persisted across opens/closes since component remains mounted in SearchPayments
+  // Reset form when payment changes
+  useEffect(() => {
+    if (isOpen && payment) {
+      form.reset({
+        title: payment.title,
+        amount: Number(payment.amount),
+        bankId: payment.bank?.id || "",
+        categoryId: payment.category?.id || "",
+        paymentMethod: (payment.paymentMethod?.value || "other") as "pix" | "credit_card" | "debit_card" | "other",
+        date: new Date(payment.date),
+      });
+      setMerchantSearch(payment.title); // Init search with current title
+    }
+  }, [isOpen, payment, form]);
 
 
   // Queries
   const { data: merchants = [], isLoading: isLoadingMerchants } = useQuery<Merchant[]>({
     queryKey: ["merchants", debouncedSearch],
     queryFn: () => api.searchMerchants(debouncedSearch),
-    enabled: isOpen, // Only fetch when open
+    enabled: isOpen,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
@@ -102,7 +116,7 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
   async function onSubmit(values: PaymentFormValues) {
     setIsLoading(true);
     try {
-      await api.createPayment({
+      await api.updatePayment(payment.id, {
         title: values.title,
         date: format(values.date, "yyyy-MM-dd"),
         amount: values.amount,
@@ -111,7 +125,7 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
         categoryId: values.categoryId === "none" || !values.categoryId ? null : values.categoryId,
       });
 
-      toast.success("Pagamento registrado!", {
+      toast.success("Pagamento atualizado!", {
         description: `Valor: ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(values.amount)}`,
       });
 
@@ -119,15 +133,11 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
       queryClient.invalidateQueries({ queryKey: ["payments-search"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
-      // Reset only amount to allow rapid entry
-      form.setValue("amount", 0);
-
-      // Optional: focus logic could go here if we had a ref to the input, 
-      // but standard React flow is enough for now.
+      onClose();
     } catch (error: any) {
       console.error(error);
-      toast.error("Erro ao registrar", {
-        description: error.message || "Ocorreu um erro ao salvar o pagamento."
+      toast.error("Erro ao atualizar", {
+        description: error.message || "Ocorreu um erro ao atualizar o pagamento."
       });
     } finally {
       setIsLoading(false);
@@ -138,8 +148,8 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
     <BaseModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Cadastrar Pagamento"
-      description="Preencha os dados do novo pagamento abaixo."
+      title="Editar Pagamento"
+      description="Altere os dados do pagamento abaixo."
       maxWidth="sm:max-w-[520px]"
     >
       <Form {...form}>
@@ -341,7 +351,7 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
               Cancelar
             </Button>
             <Button className="w-1/2" type="submit" disabled={isLoading}>
-              {isLoading ? "Cadastrando..." : "Cadastrar Pagamento"}
+              {isLoading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </form>
