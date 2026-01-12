@@ -38,6 +38,7 @@ import { Bank } from "@/models/Bank";
 import { Merchant } from "@/models/Merchant";
 import { BaseModal } from "@/components/admin/BaseModal";
 import { MerchantSelect } from "./MerchantSelect";
+import { CategoryCombobox } from "@/components/CategoryCombobox";
 
 interface CreatePaymentModalProps {
   isOpen: boolean;
@@ -317,24 +318,17 @@ export function CreatePaymentModal({ isOpen, onClose, onSuccess }: CreatePayment
               name="categoryId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Categoria (Opcional)</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        Categoria padrão ({selectedMerchant?.categoryId ? categories.find((category) => category.id === selectedMerchant.categoryId)?.name : "Nenhuma"})
-                      </SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Categoria</FormLabel>
+                  <CategoryCombobox
+                    value={field.value}
+                    categories={categories}
+                    onChange={field.onChange}
+                    showUncategorized={false}
+                    extraOption={{
+                      value: "none",
+                      label: `Categoria sugerida (${selectedMerchant?.categoryId ? categories.find((category) => category.id === selectedMerchant.categoryId)?.name : "Nenhuma"})`
+                    }}
+                  />
                   <FormDescription className="text-xs text-muted-foreground">Categoria padrão do estabelecimento.</FormDescription>
                   <FormMessage />
                 </FormItem>

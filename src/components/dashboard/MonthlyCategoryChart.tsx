@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { formatPeriodLabel, calculateYearForMonth } from '@/utils/formatters';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MonthCombobox } from '@/components/MonthCombobox';
 import {
   formatCurrency,
 } from '@/data/financialData';
@@ -43,13 +44,12 @@ export function MonthlyCategoryChart({ selectedMonth, data, selectedYear, onSele
   }, [selectedMonth]);
 
   const isMonthSelected = internalMonth !== null && internalMonth !== -1;
-  const isAnnualReport = internalMonth === -1;
+  const isAnnualReport = internalMonth === -1 || internalMonth === null;
 
-  const handleMonthChange = (val: string) => {
-    const newVal = parseInt(val);
-    setInternalMonth(newVal);
-    if (newVal !== -1) {
-      onSelectMonth(newVal);
+  const handleMonthChange = (val: number) => {
+    setInternalMonth(val);
+    if (val !== -1) {
+      onSelectMonth(val);
     }
   };
 
@@ -241,28 +241,19 @@ export function MonthlyCategoryChart({ selectedMonth, data, selectedYear, onSele
         </div>
 
         <div className="flex items-center gap-4">
-          <Select
-            value={internalMonth !== null ? internalMonth.toString() : ""}
-            onValueChange={handleMonthChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione o mês" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="-1">Relatório Anual</SelectItem>
-              {availableMonths.map((month, index) => (
-                <SelectItem key={`${month.month}-${index}`} value={index.toString()}>
-                  {month.month}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="w-[180px]">
+            <MonthCombobox
+              selectedMonth={internalMonth}
+              months={availableMonths}
+              onSelectMonth={handleMonthChange}
+            />
+          </div>
         </div>
       </div>
 
       <div className="h-[350px]">
         <ResponsiveContainer width="100%" height="100%">
-          {internalMonth !== null && (isAnnualReport || data[internalMonth]) ? (
+          {(isAnnualReport || (internalMonth !== null && data[internalMonth])) ? (
             <BarChart
               data={categoryChartData}
               layout="vertical"

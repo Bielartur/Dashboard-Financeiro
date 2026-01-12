@@ -2,14 +2,25 @@ import { BarChart3, Calendar, Search, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { MonthCombobox } from '../MonthCombobox';
 
 interface DashboardHeaderProps {
   selectedMonth: number | null;
   selectedYear: string;
   onSelectYear: (year: string) => void;
+  onSelectMonth: (index: number) => void;
+  monthsWithData: { month: string; year: number }[];
+  availableYears: number[];
 }
 
-export function DashboardHeader({ selectedMonth, selectedYear, onSelectYear }: DashboardHeaderProps) {
+export function DashboardHeader({
+  selectedMonth,
+  selectedYear,
+  onSelectYear,
+  onSelectMonth,
+  monthsWithData,
+  availableYears
+}: DashboardHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -36,23 +47,36 @@ export function DashboardHeader({ selectedMonth, selectedYear, onSelectYear }: D
           </Button>
         </Link>
 
+        {/* Month Selector */}
+        <div className="flex items-center gap-2">
+          <div className="w-[180px]">
+            <MonthCombobox
+              selectedMonth={selectedMonth}
+              months={monthsWithData}
+              onSelectMonth={onSelectMonth}
+              disabled={monthsWithData.length === 0}
+            />
+          </div>
+        </div>
+
+        {/* Year Selector */}
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary/50 border border-border/50">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground mr-1">
-            Período
+            Ano
           </span>
           <Select
             value={selectedYear}
             onValueChange={onSelectYear}
           >
-            <SelectTrigger className="w-[140px] h-6 border-none bg-transparent p-0 focus:ring-0 text-sm font-medium text-foreground">
+            <SelectTrigger className="w-[100px] h-6 border-none bg-transparent p-0 focus:ring-0 text-sm font-medium text-foreground">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="last-12">Últimos 12 meses</SelectItem>
+              <SelectItem value="last-12">Últimos 12</SelectItem>
+              {availableYears.map(year => (
+                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
