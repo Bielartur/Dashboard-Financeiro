@@ -7,9 +7,10 @@ export interface PaymentCreate {
   title: string;
   date: string;
   amount: number;
-  paymentMethod: "pix" | "credit_card" | "debit_card" | "other";
+  paymentMethod?: "pix" | "credit_card" | "debit_card" | "boleto" | "bill_payment" | "investment_redemption" | "other";
   bankId: string;
   categoryId?: string | null;
+  id?: string;
   hasMerchant?: boolean;
 }
 
@@ -28,6 +29,7 @@ export interface PaymentResponse {
 }
 
 export interface PaymentImportResponse {
+  id?: string;
   date: string;
   title: string;
   amount: number;
@@ -36,9 +38,14 @@ export interface PaymentImportResponse {
     slug: string;
     name: string;
     type: string;
+    colorHex: string;
   };
   hasMerchant?: boolean;
   alreadyExists?: boolean;
+  paymentMethod?: {
+    value: string;
+    displayName: string;
+  };
 }
 
 export interface PaymentFilters {

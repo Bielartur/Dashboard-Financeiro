@@ -3,7 +3,7 @@ export interface Category {
   name: string;
   slug: string;
   colorHex: string;
-  type: "income" | "expense";
+  type: "income" | "expense" | "neutral";
   createdAt?: string;
   updatedAt?: string;
 }
@@ -11,10 +11,10 @@ export interface Category {
 export interface CategoryCreate {
   name: string;
   colorHex: string;
-  type: "income" | "expense";
+  type: "income" | "expense" | "neutral";
 }
 export interface CategoryUpdate {
   name?: string;
   colorHex?: string;
-  type?: "income" | "expense";
+  type?: "income" | "expense" | "neutral";
 }
