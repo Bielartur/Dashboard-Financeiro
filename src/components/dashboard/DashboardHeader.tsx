@@ -74,7 +74,7 @@ export function DashboardHeader({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="last-12">Últimos 12</SelectItem>
-              {availableYears.map(year => (
+              {availableYears.filter(y => y !== null).map(year => (
                 <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
               ))}
             </SelectContent>
