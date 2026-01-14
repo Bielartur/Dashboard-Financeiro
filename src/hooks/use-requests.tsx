@@ -83,14 +83,15 @@ const deleteBank = async (id: string) => {
   return await apiRequest<void>(`banks/${id}`, "DELETE");
 };
 
-const importPayments = async (file: File, source: string) => {
+const importPayments = async (file: File, source: string, type: string = "invoice") => {
   const formData = new FormData();
   formData.append("file", file);
-  return await apiRequest<PaymentImportResponse[]>(`payments/import/${source}`, "POST", formData);
+  return await apiRequest<PaymentImportResponse[]>(`payments/import/${source}?type=${type}`, "POST", formData);
 };
 
-const createPaymentsBulk = async (payments: PaymentCreate[]) => {
-  return await apiRequest<PaymentResponse[]>("payments/bulk", "POST", payments as unknown as Record<string, unknown>);
+const createPaymentsBulk = async (payments: PaymentCreate[], sourceType?: string) => {
+  const url = sourceType ? `payments/bulk?import_type=${sourceType}` : "payments/bulk";
+  return await apiRequest<PaymentResponse[]>(url, "POST", payments as unknown as Record<string, unknown>);
 };
 
 
