@@ -7,6 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PaymentImportResponse } from "@/models/Payment";
+import { getPaymentMethodIcon } from "@/utils/payment-icons";
 import { formatCurrency } from "@/data/financialData";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -86,8 +87,9 @@ export function ImportPaymentTable({
             </TableHead>
             <TableHead>Data</TableHead>
             <TableHead>Estabelecimento</TableHead>
-            <TableHead className="text-right">Valor</TableHead>
+            <TableHead>Método</TableHead>
             <TableHead>Categoria</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -96,6 +98,20 @@ export function ImportPaymentTable({
             const isDuplicate = payment.alreadyExists;
 
             const isNew = !payment.hasMerchant && !isDuplicate;
+            const isExpense = payment.amount < 0;
+
+            const filteredCategories = categories.filter((c) => {
+              // Exclude system categories
+              if (c.slug === "pagamento-de-fatura" || c.slug === "resgate-de-investimento") {
+                return false;
+              }
+
+              // Allow neutral categories for both flows
+              if (c.type === "neutral") return true;
+
+              // Otherwise match exact flow
+              return isExpense ? c.type === "expense" : c.type === "income";
+            });
 
             return (
               <TableRow
@@ -133,15 +149,38 @@ export function ImportPaymentTable({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right font-medium">
-                  {formatCurrency(payment.amount)}
+                <TableCell>
+                  {(() => {
+                    // Fix: extract value safely
+                    const methodValue = payment.paymentMethod?.value || 'other';
+                    const { icon: Icon, colorClass } = getPaymentMethodIcon(methodValue);
+                    return (
+                      <div className="flex items-center gap-2">
+                        <div className={`p-1.5 rounded-md bg-opacity-10 ${colorClass.replace('text-', 'bg-')}`}>
+                          <Icon className={`w-4 h-4 ${colorClass}`} />
+                        </div>
+                        <span className="font-medium text-xs">
+                          {payment.paymentMethod?.displayName || "Desconhecido"}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </TableCell>
                 <TableCell className="w-[300px]">
-                  <CategoryCombobox
-                    value={payment.category?.id || "uncategorized"}
-                    categories={categories}
-                    onChange={(value) => onCategoryChange(index, value)}
-                  />
+                  {(payment.paymentMethod?.value === "bill_payment" || payment.paymentMethod?.value === "investment_redemption") && payment.category ? (
+                    <div className="flex items-center">
+                      <CategoryBadge category={payment.category} />
+                    </div>
+                  ) : (
+                    <CategoryCombobox
+                      value={payment.category?.id || "uncategorized"}
+                      categories={filteredCategories}
+                      onChange={(value) => onCategoryChange(index, value)}
+                    />
+                  )}
+                </TableCell>
+                <TableCell className={cn("text-right font-medium", isExpense ? "text-red-500" : "text-green-500")}>
+                  {formatCurrency(payment.amount)}
                 </TableCell>
               </TableRow>
             );

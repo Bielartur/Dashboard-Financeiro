@@ -15,7 +15,7 @@ export function CategoryBadge({ variant = "default", category }: CategoryBadgePr
       <span
         className={`font-medium text-foreground ${variant === "subtle" ? "text-muted-foreground" : ""}`}
       >
-        {category.name}
+        {typeof category.name === 'string' ? category.name : (category.name as any)?.name || 'Invalid Name'}
       </span>
     </div>
   );

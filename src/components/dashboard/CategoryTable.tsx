@@ -44,6 +44,8 @@ export function CategoryTable({ selectedMonth, selectedYear, data }: CategoryTab
   const { getCategories, searchPayments } = useRequests();
   const [categories, setCategories] = useState<Category[]>([]);
   const [payments, setPayments] = useState<PaymentResponse[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -128,10 +130,17 @@ export function CategoryTable({ selectedMonth, selectedYear, data }: CategoryTab
 
         const dataRes = await searchPayments({
           categoryId: category.id,
+          page,
           startDate,
           endDate
         });
-        setPayments(dataRes);
+        if (dataRes && dataRes.items) {
+          setPayments(dataRes.items);
+          setTotalPages(dataRes.pages);
+        } else {
+          setPayments([]);
+          setTotalPages(1);
+        }
       } catch (error) {
         console.error("Failed to fetch payments:", error);
         setPayments([]);
@@ -141,7 +150,7 @@ export function CategoryTable({ selectedMonth, selectedYear, data }: CategoryTab
     };
 
     fetchPayments();
-  }, [selectedCategory, selectedMonth, selectedYear, categories, data]);
+  }, [selectedCategory, selectedMonth, selectedYear, categories, data, page]);
 
   // Aggregate or Select Data
   const tableData: TableItem[] = useMemo(() => {
@@ -301,7 +310,13 @@ export function CategoryTable({ selectedMonth, selectedYear, data }: CategoryTab
             </TableBody>
           </Table>
         ) : (
-          <PaymentTable payments={payments} isLoading={isLoading} />
+          <PaymentTable
+            payments={payments}
+            isLoading={isLoading}
+            totalPages={totalPages}
+            currentPage={page}
+            onPageChange={setPage}
+          />
         )}
       </div>
     </div>

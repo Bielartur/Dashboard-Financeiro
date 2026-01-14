@@ -122,6 +122,7 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
                   <SelectContent>
                     <SelectItem value="expense">Despesa</SelectItem>
                     <SelectItem value="income">Receita</SelectItem>
+                    <SelectItem value="neutral">Neutra</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

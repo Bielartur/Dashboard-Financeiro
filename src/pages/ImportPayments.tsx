@@ -22,7 +22,7 @@ const ImportPayments = () => {
   const api = useRequests();
   const [file, setFile] = useState<File | null>(null);
   const [selectedBank, setSelectedBank] = useState<string>("");
-  const [paymentMethod, setPaymentMethod] = useState<"pix" | "credit_card" | "debit_card" | "other">("credit_card");
+  const [importType, setImportType] = useState<"invoice" | "statement">("invoice");
   const [importedPayments, setImportedPayments] = useState<PaymentImportResponse[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [isImporting, setIsImporting] = useState(false);
@@ -63,7 +63,18 @@ const ImportPayments = () => {
         else if (slug === "itau") source = "itau";
       }
 
-      const response = await api.importPayments(file, source);
+      const response = await api.importPayments(file, source, importType);
+
+      // Sort payments: New First -> Known (Not Duplicate) -> Duplicates Last
+      response.sort((a, b) => {
+        const getRank = (p: PaymentImportResponse) => {
+          if (p.alreadyExists) return 3; // Duplicates last
+          if (p.hasMerchant) return 2;   // Known (Merchant found) second
+          return 1;                      // New (No Merchant) first
+        };
+        return getRank(a) - getRank(b);
+      });
+
       setImportedPayments(response);
 
       // Select only non-duplicate items by default
@@ -92,7 +103,8 @@ const ImportPayments = () => {
           id: category.id,
           name: category.name,
           slug: category.slug,
-          type: category.type
+          type: category.type,
+          colorHex: category.colorHex
         },
       };
       setImportedPayments(updatedPayments);
@@ -102,10 +114,10 @@ const ImportPayments = () => {
   const handleSavePayments = async () => {
     if (importedPayments.length === 0) return;
 
-    // Validate that all payments have a category
-    const hasMissingCategories = importedPayments.some((p) => !p.category?.id);
+    // Validate that all SELECTED payments have a category
+    const hasMissingCategories = importedPayments.some((p, index) => selectedIndices.has(index) && !p.category?.id);
     if (hasMissingCategories) {
-      toast.error("Por favor, selecione uma categoria para todos os pagamentos.");
+      toast.error("Por favor, selecione uma categoria para os pagamentos selecionados.");
       return;
     }
 
@@ -120,16 +132,16 @@ const ImportPayments = () => {
       const selectedPayments = importedPayments.filter((_, index) => selectedIndices.has(index));
 
       const paymentsToCreate: PaymentCreate[] = selectedPayments.map(p => ({
+        id: p.id,
         title: p.title,
         date: p.date,
-        amount: p.amount,
+        amount: Math.abs(p.amount), // Backend expects positive value
         bankId: selectedBank,
         categoryId: p.category!.id, // Safe assertion due to validation above
-        paymentMethod: paymentMethod,
         hasMerchant: p.hasMerchant
       }));
 
-      await api.createPaymentsBulk(paymentsToCreate);
+      await api.createPaymentsBulk(paymentsToCreate, importType);
       toast.success("Pagamentos salvos com sucesso!");
       setImportedPayments([]);
       setFile(null);
@@ -181,16 +193,14 @@ const ImportPayments = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Método de Pagamento</label>
-              <Select value={paymentMethod} onValueChange={(v: any) => setPaymentMethod(v)}>
+              <label className="text-sm font-medium">Tipo de Importação</label>
+              <Select value={importType} onValueChange={(v: "invoice" | "statement") => setImportType(v)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione o método" />
+                  <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="debit_card">Cartão de Débito</SelectItem>
-                  <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                  <SelectItem value="pix">Pix</SelectItem>
-                  <SelectItem value="other">Outro</SelectItem>
+                  <SelectItem value="invoice">Fatura do Cartão</SelectItem>
+                  <SelectItem value="statement">Extrato Bancário</SelectItem>
                 </SelectContent>
               </Select>
             </div>

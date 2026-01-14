@@ -9,14 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { PaginationControl } from '../PaginationControl';
 import { Loader2, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatCurrency } from '@/data/financialData';
@@ -81,31 +74,11 @@ export function PaymentTable({
   return (
     <div className="relative space-y-4">
 
-      {totalPages > 1 && (
-        <Pagination>
-          <PaginationContent className='w-full flex justify-between items-center'>
-            <PaginationItem>
-              <PaginationPrevious
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                onClick={() => handlePageChange(currentPage - 1)}
-              />
-            </PaginationItem>
-
-            <PaginationItem>
-              <span className="text-sm text-muted-foreground mx-4">
-                Página {currentPage} de {totalPages}
-              </span>
-            </PaginationItem>
-
-            <PaginationItem>
-              <PaginationNext
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                onClick={() => handlePageChange(currentPage + 1)}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      )}
+      <PaginationControl
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <div className="rounded-md border relative">
         {isLoading && (
