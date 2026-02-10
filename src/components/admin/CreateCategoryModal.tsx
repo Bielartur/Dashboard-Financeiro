@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useRequests } from "@/hooks/use-requests";
-import { BaseModal } from "../BaseModal";
+import { BaseModal } from "./BaseModal";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";

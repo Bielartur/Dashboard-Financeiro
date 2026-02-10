@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
@@ -13,20 +13,24 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Bank } from "@/models/Bank";
+import { useRequests } from "@/hooks/use-requests";
 import { BankSchema, BankFormValues } from "@/models/schemas/BankSchema";
-import { BaseModal } from "../BaseModal";
+import { BaseModal } from "./BaseModal";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
-interface EditBankModalProps {
-  bank: Bank | null;
+interface CreateBankModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (id: string, data: Partial<BankFormValues>) => Promise<void>;
 }
 
-export function EditBankModal({ bank, isOpen, onClose, onSave }: EditBankModalProps) {
+export function CreateBankModal({ isOpen, onClose }: CreateBankModalProps) {
+  const api = useRequests();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<BankFormValues>({
     resolver: zodResolver(BankSchema),
     defaultValues: {
@@ -36,32 +40,45 @@ export function EditBankModal({ bank, isOpen, onClose, onSave }: EditBankModalPr
     },
   });
 
-  useEffect(() => {
-    if (bank) {
-      form.reset({
-        name: bank.name,
-        colorHex: bank.colorHex,
-        logoUrl: bank.logoUrl,
+  async function onSubmit(values: BankFormValues) {
+    setIsLoading(true);
+    try {
+      await api.createBank({
+        name: values.name,
+        colorHex: values.colorHex,
+        logoUrl: values.logoUrl || "https://placehold.co/600",
       });
-    }
-  }, [bank, form]);
 
-  const handleSubmit = async (values: BankFormValues) => {
-    if (!bank) return;
-    await onSave(bank.id, values);
-    onClose();
-  };
+      toast({
+        variant: "success",
+        title: "Sucesso",
+        description: "Banco cadastrado com sucesso!",
+      });
+      await queryClient.invalidateQueries({ queryKey: ["banks"] });
+      form.reset();
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao cadastrar banco",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <BaseModal
-      title="Editar Banco"
-      description="Faça alterações no banco aqui. Clique em salvar quando terminar."
+      title="Novo Banco"
+      description="Preencha os dados abaixo para cadastrar um novo banco."
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="sm:max-w-[600px]"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="name"
@@ -149,18 +166,12 @@ export function EditBankModal({ bank, isOpen, onClose, onSave }: EditBankModalPr
           )}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} className="w-1/2" disabled={form.formState.isSubmitting}>
+            <Button type="button" variant="outline" onClick={onClose} className="w-1/2" disabled={isLoading}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              className="w-1/2"
-              disabled={form.formState.isSubmitting || !form.formState.isDirty}
-            >
-              {form.formState.isSubmitting && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Salvar alterações
+            <Button type="submit" className="w-1/2" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Cadastrar
             </Button>
           </DialogFooter>
         </form>

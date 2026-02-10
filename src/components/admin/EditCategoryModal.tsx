@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Category, CategoryUpdate, CategorySettingsUpdate } from "@/models/Category";
-import { BaseModal } from "../BaseModal";
+import { BaseModal } from "./BaseModal";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import {

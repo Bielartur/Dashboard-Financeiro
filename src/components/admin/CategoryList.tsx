@@ -2,18 +2,15 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRequests } from "@/hooks/use-requests";
 import { Category } from "@/models/Category";
-import { AdminTable, Column } from "../AdminTable";
+import { AdminTable, Column } from "./AdminTable";
 import { CategoryBadge } from "@/components/shared/CategoryBadge";
 import { EditCategoryModal } from "./EditCategoryModal";
-import { ConfirmDeleteModal } from "../ConfirmDeleteModal";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { toast } from "sonner";
 
-interface CategoryListProps {
-  onAddClick?: () => void;
-}
 
-export function CategoryList({ onAddClick }: CategoryListProps) {
+export function CategoryList() {
   const api = useRequests();
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({

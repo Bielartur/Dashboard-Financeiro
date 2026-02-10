@@ -1,5 +1,5 @@
 
-import { BankList } from "@/components/admin/banks/BankList";
+import { BankList } from "@/components/admin/BankList";
 
 export default function BanksPage() {
   return <BankList />;
