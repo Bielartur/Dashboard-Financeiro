@@ -6,14 +6,16 @@ interface SidebarMenuItemProps {
   icon: LucideIcon;
   label: string;
   path: string;
+  active?: boolean;
+  onClick?: () => void;
 }
 
-export const SidebarMenuItem = ({ icon: Icon, label, path }: SidebarMenuItemProps) => {
+export const SidebarMenuItem = ({ icon: Icon, label, path, active, onClick }: SidebarMenuItemProps) => {
   const location = useLocation();
-  const isActive = location.pathname === path;
+  const isActive = active !== undefined ? active : location.pathname.includes(path);
 
   return (
-    <Link to={path}>
+    <Link to={path} onClick={onClick}>
       <div
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer group',

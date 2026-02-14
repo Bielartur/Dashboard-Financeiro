@@ -1,13 +1,26 @@
-import { BarChart3, ArrowLeftRight, CreditCard, Settings, Crown, ShieldCheck } from 'lucide-react';
+import { BarChart3, ArrowLeftRight, Settings, Crown, X } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { SidebarMenuItem } from './SidebarMenuItem';
 import { SidebarUserProfile } from './SidebarUserProfile';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   return (
-    <aside className="w-64 h-screen bg-card border-r border-border/50 flex flex-col fixed left-0 top-0 z-20">
+    <aside
+      className={cn(
+        "fixed left-0 top-0 z-40 h-screen w-64 bg-card border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0",
+        isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+      )}
+    >
       {/* Logo Section */}
-      <div className="p-6 border-b border-border/50">
+      <div className="p-6 border-b border-border/50 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-primary/20">
             <BarChart3 className="h-5 w-5 text-primary" />
@@ -17,6 +30,15 @@ export const Sidebar = () => {
             <p className="text-xs text-muted-foreground">Financeiro</p>
           </div>
         </div>
+        {/* Close Button Mobile */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* User Profile */}
@@ -32,9 +54,15 @@ export const Sidebar = () => {
             Principal
           </h2>
           <div className="space-y-1">
-            <SidebarMenuItem icon={BarChart3} label="Dashboard" path="/" />
-            <SidebarMenuItem icon={ArrowLeftRight} label="Transações" path="/transactions" />
-            {/* <SidebarMenuItem icon={CreditCard} label="Assinaturas" path="/subscriptions" /> */}
+            <SidebarMenuItem
+              icon={BarChart3}
+              label="Dashboard"
+              path="/"
+              active={['/', '/categories', '/banks', '/merchants'].includes(useLocation().pathname)}
+              onClick={onClose}
+            />
+            <SidebarMenuItem icon={ArrowLeftRight} label="Transações" path="/transactions" onClick={onClose} />
+            {/* <SidebarMenuItem icon={CreditCard} label="Assinaturas" path="/subscriptions" onClick={onClose} /> */}
           </div>
         </div>
 
@@ -44,7 +72,7 @@ export const Sidebar = () => {
             Outros
           </h2>
           <div className="space-y-1">
-            <SidebarMenuItem icon={Settings} label="Configurações" path="/profile/merchants" />
+            <SidebarMenuItem icon={Settings} label="Configurações" path="/profile" onClick={onClose} />
           </div>
         </div>
       </nav>

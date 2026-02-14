@@ -22,7 +22,7 @@ interface BreadcrumbHeaderProps {
 
 export function BreadcrumbHeader({ items, className }: BreadcrumbHeaderProps) {
   return (
-    <div className={`mb-6 ${className}`}>
+    <div className={className}>
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
