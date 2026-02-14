@@ -15,7 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bank } from "@/models/Bank";
 import { Category } from "@/models/Category";
 import { TransactionImportResponse, TransactionCreate } from "@/models/Transaction";
-import { ImportTransactionTable } from "@/components/import/ImportTransactionTable";
+import { ImportTransactionTable } from "@/components/transactions/import/ImportTransactionTable";
 import { BankCombobox } from "@/components/shared/combobox/BankCombobox";
 import { toast } from "sonner";
 import { BreadcrumbHeader } from "@/components/shared/BreadcrumbHeader";
@@ -157,7 +157,7 @@ const ImportTransactions = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-2">
+      <div className="mb-2 hidden lg:block">
         <BreadcrumbHeader items={[{ label: 'Transações', href: '/transactions' }, { label: 'Importar' }]} />
       </div>
       {/* Header */}

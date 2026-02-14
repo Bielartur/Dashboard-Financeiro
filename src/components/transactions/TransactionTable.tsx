@@ -82,92 +82,88 @@ export function TransactionTable({
       />
 
       <div className="rounded-md border relative">
-        {isLoading ? (
-          <TableSkeleton columns={showCategory ? 7 : 6} rows={5} />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/50 hover:bg-transparent">
-                <TableHead className="text-muted-foreground font-semibold">Data</TableHead>
-                <TableHead className="text-muted-foreground font-semibold">Título</TableHead>
-                {showCategory && <TableHead className="text-muted-foreground font-semibold">Categoria</TableHead>}
-                <TableHead className="text-muted-foreground font-semibold">Forma de pagamento</TableHead>
-                <TableHead className="text-muted-foreground font-semibold">Banco</TableHead>
-                <TableHead className="text-muted-foreground font-semibold text-right">Valor</TableHead>
-                <TableHead className="text-muted-foreground font-semibold text-center w-[100px]">Ações</TableHead>
+        <Table className={isLoading ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
+          <TableHeader>
+            <TableRow className="border-border/50 hover:bg-transparent">
+              <TableHead className="text-muted-foreground font-semibold">Data</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Título</TableHead>
+              {showCategory && <TableHead className="text-muted-foreground font-semibold">Categoria</TableHead>}
+              <TableHead className="text-muted-foreground font-semibold">Forma de pagamento</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Banco</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-right">Valor</TableHead>
+              <TableHead className="text-muted-foreground font-semibold text-center w-[100px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {transactions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={showCategory ? 7 : 6} className="h-24 text-center">
+                  <EmptyState
+                    title="Nenhuma transação encontrada"
+                    description={emptyMessage}
+                    className="py-12"
+                  />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={showCategory ? 7 : 6} className="h-24 text-center">
-                    <EmptyState
-                      title="Nenhuma transação encontrada"
-                      description={emptyMessage}
-                      className="py-12"
+            ) : (
+              transactions.map((transaction) => (
+                <TableRow key={transaction.id} className="border-border/30 hover:bg-secondary/30 transition-colors group">
+                  <TableCell className="text-muted-foreground">
+                    {transaction.date.split('-').reverse().join('/')}
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">{transaction.title}</TableCell>
+                  {showCategory && (
+                    <TableCell>
+                      {transaction.category && (
+                        <CategoryBadge variant="subtle" category={transaction.category} />
+                      )}
+                    </TableCell>
+                  )}
+                  <TableCell className="text-muted-foreground">
+                    {(() => {
+                      const { icon: Icon, colorClass } = getTransactionMethodIcon(transaction.paymentMethod?.value || 'other');
+                      return (
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-md bg-opacity-10 ${colorClass.replace('text-', 'bg-')}`}>
+                            <Icon className={`w-4 h-4 ${colorClass}`} />
+                          </div>
+                          <span className="font-medium">{transaction.paymentMethod?.displayName || '-'}</span>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground flex items-center gap-2">
+                    <BankLogo
+                      logoUrl={transaction.bank?.logoUrl}
+                      name={transaction.bank?.name || ''}
+                      colorHex={transaction.bank?.colorHex}
                     />
                   </TableCell>
+                  <TableCell className={`text-right font-semibold ${Number(transaction.amount) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {Number(transaction.amount) > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditingTransaction(transaction)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeletingTransactionId(transaction.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              ) : (
-                transactions.map((transaction) => (
-                  <TableRow key={transaction.id} className="border-border/30 hover:bg-secondary/30 transition-colors group">
-                    <TableCell className="text-muted-foreground">
-                      {transaction.date.split('-').reverse().join('/')}
-                    </TableCell>
-                    <TableCell className="font-medium text-foreground">{transaction.title}</TableCell>
-                    {showCategory && (
-                      <TableCell>
-                        {transaction.category && (
-                          <CategoryBadge variant="subtle" category={transaction.category} />
-                        )}
-                      </TableCell>
-                    )}
-                    <TableCell className="text-muted-foreground">
-                      {(() => {
-                        const { icon: Icon, colorClass } = getTransactionMethodIcon(transaction.paymentMethod?.value || 'other');
-                        return (
-                          <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-md bg-opacity-10 ${colorClass.replace('text-', 'bg-')}`}>
-                              <Icon className={`w-4 h-4 ${colorClass}`} />
-                            </div>
-                            <span className="font-medium">{transaction.paymentMethod?.displayName || '-'}</span>
-                          </div>
-                        );
-                      })()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground flex items-center gap-2">
-                      <BankLogo
-                        logoUrl={transaction.bank?.logoUrl}
-                        name={transaction.bank?.name || ''}
-                        colorHex={transaction.bank?.colorHex}
-                      />
-                    </TableCell>
-                    <TableCell className={`text-right font-semibold ${Number(transaction.amount) < 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                      {Number(transaction.amount) > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => setEditingTransaction(transaction)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => setDeletingTransactionId(transaction.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-              <TableRow className="border-border/50 bg-secondary/10">
-                <TableCell colSpan={showCategory ? 5 : 4} className="text-right font-bold">Total (Página)</TableCell>
-                <TableCell className="text-right font-bold text-expense">
-                  {formatCurrency(transactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0))}
-                </TableCell>
-                <TableCell />
-              </TableRow>
-            </TableBody>
-          </Table>
-        )}
+              ))
+            )}
+            <TableRow className="border-border/50 bg-secondary/10">
+              <TableCell colSpan={showCategory ? 5 : 4} className="text-right font-bold">Total (Página)</TableCell>
+              <TableCell className="text-right font-bold text-expense">
+                {formatCurrency(transactions.reduce((sum, transaction) => sum + Number(transaction.amount), 0))}
+              </TableCell>
+              <TableCell />
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
 
       {editingTransaction && (
