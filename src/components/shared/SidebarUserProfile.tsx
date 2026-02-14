@@ -20,8 +20,6 @@ export const SidebarUserProfile = () => {
   // Simple avatar generation based on name
   const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
 
-  console.log(user);
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
