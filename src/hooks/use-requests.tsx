@@ -5,6 +5,8 @@ import { transactionService } from "@/services/transactionService";
 import { merchantService } from "@/services/merchantService";
 import { dashboardService } from "@/services/dashboardService";
 import { openFinanceService } from "@/services/openFinanceService";
+import { userService } from "@/services/userService";
+
 
 import { Category, CategoryCreate, CategoryUpdate } from "@/models/Category";
 import { Bank, BankCreate } from "@/models/Bank";
@@ -60,4 +62,9 @@ export const useRequests = () => ({
   createOpenFinanceItem: openFinanceService.createItem,
   syncOpenFinanceItem: openFinanceService.syncItem,
   syncOpenFinanceAccount: openFinanceService.syncAccount,
+
+  // User
+  updateUser: userService.updateUser,
+  changePassword: userService.changePassword,
+  uploadAvatar: userService.uploadAvatar,
 });
