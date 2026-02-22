@@ -11,9 +11,8 @@ import {
 } from '@/components/ui/table';
 import { PaginationControl } from '../shared/PaginationControl';
 import { Edit, Trash2 } from 'lucide-react';
-import { TableSkeleton } from '@/components/shared/TableSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { formatCurrency } from '@/data/financialData';
+import { formatCurrency } from '@/utils/utils';
 import { BankLogo } from '../shared/BankLogo';
 import { CategoryBadge } from '../shared/CategoryBadge';
 import { Button } from '@/components/ui/button';

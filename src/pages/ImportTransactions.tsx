@@ -37,7 +37,7 @@ const ImportTransactions = () => {
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: api.getCategories,
+    queryFn: () => api.getCategories(),
   });
 
   // Filter banks that support import (currently only Nubank)
