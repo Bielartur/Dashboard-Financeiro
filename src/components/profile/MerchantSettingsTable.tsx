@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,12 +22,16 @@ import { DebouncedSearchInput } from "@/components/shared/DebouncedSearchInput";
 import { Category } from "@/models/Category";
 import { CategoryBadge } from "@/components/shared/CategoryBadge";
 
+import { BooleanLabel } from "@/components/shared/BooleanLabel";
+
 // Define interface locally if not in models yet
 interface MerchantAlias {
   id: string;
   pattern: string;
   merchantIds: string[];
   categoryId?: string;
+  isInvestment?: boolean;
+  ignored?: boolean;
 }
 
 export function MerchantSettingsTable() {
@@ -34,29 +39,30 @@ export function MerchantSettingsTable() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [scope, setScope] = useState<"general" | "investment" | "ignored">("general");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAliasId, setEditingAliasId] = useState<string | null>(null);
   // Store full objects to persist selection across pages/searches
   const [selectedItems, setSelectedItems] = useState<MerchantAlias[]>([]);
   const limit = 20;
 
-  // Reset page when search changes
+  // Reset page when search or scope changes
   useEffect(() => {
     setPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, scope]);
 
   const { data, isLoading } = useQuery<PaginatedResponse<MerchantAlias>>({
-    queryKey: ["merchant-aliases", page, searchQuery],
+    queryKey: ["merchant-aliases", page, searchQuery, scope],
     queryFn: () =>
       searchQuery
-        ? api.searchMerchantAliases(searchQuery, page, limit)
-        : api.getMerchantAliases(page, limit),
+        ? api.searchMerchantAliases(searchQuery, page, limit, scope)
+        : api.getMerchantAliases(page, limit, scope),
     placeholderData: keepPreviousData,
   });
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: api.getCategories,
+    queryFn: () => api.getCategories(),
   });
 
   const aliases = data?.items || [];
@@ -116,6 +122,14 @@ export function MerchantSettingsTable() {
         </Button>
       </div>
 
+      <Tabs defaultValue="general" value={scope} onValueChange={(v) => setScope(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="general">Gerais</TabsTrigger>
+          <TabsTrigger value="investment">Investimentos</TabsTrigger>
+          <TabsTrigger value="ignored">Ignoradas no Dashboard</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <div className="rounded-md border h-[60vh] overflow-y-auto relative">
         <Table>
           <TableHeader className="sticky top-0 bg-secondary z-10 shadow-sm">
@@ -130,6 +144,8 @@ export function MerchantSettingsTable() {
               <TableHead>Nome do Estabelecimento (Apelido)</TableHead>
               <TableHead>Qtd. Variações</TableHead>
               <TableHead>Categoria Padrão</TableHead>
+              <TableHead className="text-center w-[100px]">Investimento?</TableHead>
+              <TableHead className="text-center w-[100px]">Ignorado?</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -176,6 +192,12 @@ export function MerchantSettingsTable() {
                       })()}
                     </span>
                   </TableCell>
+                  <TableCell className="text-center">
+                    <BooleanLabel check={alias.isInvestment} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <BooleanLabel check={alias.ignored} />
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
@@ -213,6 +235,6 @@ export function MerchantSettingsTable() {
         aliasId={editingAliasId}
         categories={categories}
       />
-    </div>
+    </div >
   );
 }

@@ -1,4 +1,6 @@
-import { Card, CardContent } from "@/components/ui/card";
+
+import { UserProfileForm } from "@/components/profile/UserProfileForm";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 
 export default function ProfileAccount() {
   return (
@@ -9,13 +11,11 @@ export default function ProfileAccount() {
           Gerencie suas informações de login e dados pessoais.
         </p>
       </div>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="p-8 text-center text-muted-foreground border rounded-lg border-dashed">
-            Em breve: Alteração de senha e email.
-          </div>
-        </CardContent>
-      </Card>
+
+      <div className="grid gap-6 max-w-3xl mx-auto">
+        <UserProfileForm />
+        <ChangePasswordForm />
+      </div>
     </div>
   );
 }

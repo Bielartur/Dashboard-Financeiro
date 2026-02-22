@@ -43,6 +43,8 @@ export function CreateMerchantAliasModal({
   const queryClient = useQueryClient();
   const [pattern, setPattern] = useState("");
   const [categoryId, setCategoryId] = useState<string>("all");
+  const [isInvestment, setIsInvestment] = useState(false);
+  const [ignored, setIgnored] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Reset pattern when opening
@@ -50,6 +52,8 @@ export function CreateMerchantAliasModal({
     if (isOpen) {
       setPattern("");
       setCategoryId("all");
+      setIsInvestment(false);
+      setIgnored(false);
     }
   }, [isOpen]);
 
@@ -71,7 +75,9 @@ export function CreateMerchantAliasModal({
       await api.createMerchantAliasGroup({
         pattern: pattern,
         merchant_ids: allMerchantIds,
-        category_id: categoryId === "all" ? null : categoryId
+        category_id: categoryId === "all" ? null : categoryId,
+        is_investment: isInvestment,
+        ignored: ignored,
       });
 
       toast.success("Agrupamento criado com sucesso!");
