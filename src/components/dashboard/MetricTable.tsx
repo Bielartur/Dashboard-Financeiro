@@ -2,8 +2,8 @@ import { useState, useMemo, useEffect } from 'react';
 import {
   formatCurrency,
   formatPercent,
-} from '@/data/financialData';
-import { formatPeriodLabel, calculateYearForMonth } from '@/utils/formatters';
+} from '@/utils/utils';
+import { formatPeriodLabel } from '@/utils/formatters';
 import { MonthlyData } from '@/models/Financial';
 import { Category } from '@/models/Category';
 import { CategoryBadge } from '@/components/shared/CategoryBadge';
@@ -30,6 +30,7 @@ interface MetricTableProps {
   selectedYear: string;
   data: MonthlyData[];
   type?: 'category' | 'merchant' | 'bank';
+  metricType?: 'expense' | 'income';
 }
 
 interface TableItem {
@@ -41,7 +42,7 @@ interface TableItem {
   status: 'above_average' | 'below_average' | 'average' | 'unknown';
 }
 
-export function MetricTable({ selectedMonth, selectedYear, data, type = 'category' }: MetricTableProps) {
+export function MetricTable({ selectedMonth, selectedYear, data, type = 'category', metricType = 'expense' }: MetricTableProps) {
   const [selectedMetric, setSelectedMetric] = useState<string>('all');
   const { getCategories, searchTransactions } = useRequests(); // TODO: Add search for Merchant/Bank transactions
   const [categories, setCategories] = useState<Category[]>([]);
@@ -99,7 +100,8 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
         const filters: any = {
           page,
           startDate,
-          endDate
+          endDate,
+          type: metricType, // Filter by 'expense' or 'income'
         };
 
         if (type === 'category') {
@@ -153,7 +155,7 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
     };
 
     fetchTransactions();
-  }, [selectedMetric, selectedMonth, selectedYear, categories, data, page, type]);
+  }, [selectedMetric, selectedMonth, selectedYear, categories, data, page, type, metricType]);
 
   // Aggregate or Select Data
   const tableData: TableItem[] = useMemo(() => {
@@ -166,7 +168,7 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
 
       data.forEach(month => {
         month.metrics.forEach(metric => {
-          if (metric.type !== 'expense') return;
+          if (metric.type !== metricType) return;
 
           const absVal = Math.abs(Number(metric.total));
           const slug = metric.id || metric.slug;
@@ -203,7 +205,7 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
       // Specific Month
       if (!data[selectedMonth]) return [];
 
-      const monthMetrics = data[selectedMonth].metrics.filter(c => c.type === 'expense');
+      const monthMetrics = data[selectedMonth].metrics.filter(c => c.type === metricType);
 
       // Calculate total ABSOLUTE value for percentages
       const monthTotal = monthMetrics.reduce((sum, c) => sum + Math.abs(Number(c.total)), 0);
@@ -220,23 +222,30 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
         };
       }).sort((a, b) => b.value - a.value);
     }
-  }, [selectedMonth, data, type]);
+  }, [selectedMonth, data, type, metricType]);
 
   // Populate dropdown options from available data in table
   const availableOptions = tableData.map(t => ({ key: t.key, name: t.name }));
 
   const getTitle = () => {
-    const suffix = type === 'category' ? 'Categoria' : type === 'merchant' ? 'Estabelecimento' : 'Banco';
+    const suffix = type === 'category' ? (metricType === 'expense' ? 'de Gastos' : 'de Receitas') : '';
     const noun = type === 'category' ? 'Categoria' : type === 'merchant' ? 'Estabelecimento' : 'Banco';
 
     return {
       label: `Filtrar por ${noun}`,
       placeholder: `Todos(as) ${noun}s`,
-      selectedPrefix: `Gastos com ${availableOptions.find(c => c.key === selectedMetric)?.name || 'Selecionado'}`
+      selectedPrefix: `${metricType === 'expense' ? 'Gastos' : 'Receitas'} com ${availableOptions.find(c => c.key === selectedMetric)?.name || 'Selecionado'}`
     }
   }
 
   const uiLabels = getTitle();
+
+  // Helper to determine status color
+  const getStatusColor = (status: string) => {
+    if (status === 'above_average') return metricType === 'income' ? 'text-income' : 'text-expense';
+    if (status === 'below_average') return metricType === 'income' ? 'text-expense' : 'text-income';
+    return 'text-muted-foreground';
+  };
 
   return (
     <div className="glass-card rounded-xl p-6 opacity-0 animate-slide-up" style={{ animationDelay: '800ms' }}>
@@ -249,7 +258,7 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
           </h3>
           <p className="text-sm font-medium text-muted-foreground">
             {selectedMetric === 'all'
-              ? "Visão geral dos gastos"
+              ? (metricType === 'expense' ? "Visão geral dos gastos" : "Visão geral das receitas")
               : uiLabels.selectedPrefix}
           </p>
         </div>
@@ -296,7 +305,7 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
                   <TableCell colSpan={4} className="h-24 text-center">
                     <EmptyState
                       title="Nenhum dado encontrado"
-                      description="Não há gastos registrados para este período."
+                      description={`Não há ${metricType === 'expense' ? 'gastos' : 'receitas'} registrados para este período.`}
                       className="py-8"
                     />
                   </TableCell>
@@ -332,12 +341,12 @@ export function MetricTable({ selectedMonth, selectedYear, data, type = 'categor
                     </TableCell>
                     <TableCell className="text-center">
                       {item.status === 'above_average' ? (
-                        <div className="inline-flex items-center gap-1 text-expense">
+                        <div className={`inline-flex items-center gap-1 ${getStatusColor('above_average')}`}>
                           <TrendingUp className="h-4 w-4" />
                           <span className="text-xs font-medium">Alto</span>
                         </div>
                       ) : item.status === 'below_average' ? (
-                        <div className="inline-flex items-center gap-1 text-income">
+                        <div className={`inline-flex items-center gap-1 ${getStatusColor('below_average')}`}>
                           <TrendingDown className="h-4 w-4" />
                           <span className="text-xs font-medium">Baixo</span>
                         </div>

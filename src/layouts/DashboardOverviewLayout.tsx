@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDashboard } from '@/hooks/use-dashboard';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,10 +16,12 @@ export interface DashboardContextType {
   selectedYear: string;
   selectedMetrics: string[];
   groupBy: 'category' | 'merchant' | 'bank';
+  viewType: 'expense' | 'income';
   isLoading: boolean;
   onSelectMonth: (index: number | null) => void;
   onSelectYear: (year: string) => void;
   onSelectMetrics: (metrics: string[]) => void;
+  onSetViewType: (type: 'expense' | 'income') => void;
 }
 
 export default function DashboardOverviewLayout() {
@@ -30,6 +32,7 @@ export default function DashboardOverviewLayout() {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>("last-12");
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
+  const [viewType, setViewType] = useState<'expense' | 'income'>('expense');
 
   // Determine groupBy from URL
   const groupBy = useMemo(() => {
@@ -58,6 +61,9 @@ export default function DashboardOverviewLayout() {
 
   const monthsData = useMemo(() => dashboardData?.months || [], [dashboardData]);
 
+  // Ref to track if grouping changed to trigger auto-selection
+  const didGroupChange = useRef(false);
+
   // Update selected month when data or year changes
   useEffect(() => {
     if (monthsData.length > 0) {
@@ -68,6 +74,43 @@ export default function DashboardOverviewLayout() {
       setSelectedMonth(null);
     }
   }, [monthsData.length, selectedYear]);
+
+  // Handle auto-selection of metrics when groupBy or viewType changes
+  useEffect(() => {
+    // Reset selection immediately when group or view type changes
+    setSelectedMetrics([]);
+    didGroupChange.current = true;
+  }, [groupBy, viewType]);
+
+  // Apply auto-selection when data is available and group changed
+  useEffect(() => {
+    if (didGroupChange.current && !isLoading && monthsData.length > 0) {
+      // Calculate total value per metric (category/merchant/bank) across all months
+      const metricTotals = new Map<string, number>();
+
+      monthsData.forEach(month => {
+        month.metrics.forEach(metric => {
+          if (metric.type === viewType) {
+            // Use Math.abs to ensure positive values for ranking
+            const currentTotal = metricTotals.get(metric.id) || 0;
+            metricTotals.set(metric.id, currentTotal + Math.abs(metric.total));
+          }
+        });
+      });
+
+      // Sort by total descending and take top 2
+      const top2Metrics = Array.from(metricTotals.entries())
+        .sort((a, b) => b[1] - a[1]) // Descending order
+        .slice(0, 2)
+        .map(entry => entry[0]);
+
+      if (top2Metrics.length > 0) {
+        setSelectedMetrics(top2Metrics);
+      }
+
+      didGroupChange.current = false;
+    }
+  }, [monthsData, isLoading, viewType]);
 
   const currentMonthData = useMemo(() =>
     (selectedMonth !== null && monthsData[selectedMonth]) ? monthsData[selectedMonth] : null
@@ -136,10 +179,12 @@ export default function DashboardOverviewLayout() {
     selectedYear,
     selectedMetrics,
     groupBy,
+    viewType,
     isLoading,
     onSelectMonth: setSelectedMonth,
     onSelectYear: setSelectedYear,
-    onSelectMetrics: setSelectedMetrics
+    onSelectMetrics: setSelectedMetrics,
+    onSetViewType: setViewType
   };
 
 
@@ -157,7 +202,7 @@ export default function DashboardOverviewLayout() {
       />
 
       {/* Grouping Control (Navigation) */}
-      <div className="-mt-2">
+      <div className="-mt-2 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <Tabs value={groupBy} onValueChange={handleTabChange} className="w-full sm:w-[400px]">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="category" className="flex items-center gap-2">
@@ -174,6 +219,28 @@ export default function DashboardOverviewLayout() {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        {/* View Type Toggle (Expenses / Income) */}
+        <div className="flex items-center bg-muted/50 p-1 rounded-lg border border-border/50">
+          <button
+            onClick={() => setViewType('expense')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewType === 'expense'
+              ? 'bg-destructive/10 text-destructive shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
+          >
+            Despesas
+          </button>
+          <button
+            onClick={() => setViewType('income')}
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${viewType === 'income'
+              ? 'bg-emerald-500/10 text-emerald-500 shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+              }`}
+          >
+            Receitas
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}

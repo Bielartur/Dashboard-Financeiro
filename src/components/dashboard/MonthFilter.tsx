@@ -1,6 +1,20 @@
-import { financialData } from '@/data/financialData';
-import { cn } from '@/lib/utils';
+import { cn } from '@/utils/utils';
 import { Calendar, RotateCcw } from 'lucide-react';
+
+const MONTHS = [
+  { month: 'Janeiro', monthShort: 'Jan' },
+  { month: 'Fevereiro', monthShort: 'Fev' },
+  { month: 'Março', monthShort: 'Mar' },
+  { month: 'Abril', monthShort: 'Abr' },
+  { month: 'Maio', monthShort: 'Mai' },
+  { month: 'Junho', monthShort: 'Jun' },
+  { month: 'Julho', monthShort: 'Jul' },
+  { month: 'Agosto', monthShort: 'Ago' },
+  { month: 'Setembro', monthShort: 'Set' },
+  { month: 'Outubro', monthShort: 'Out' },
+  { month: 'Novembro', monthShort: 'Nov' },
+  { month: 'Dezembro', monthShort: 'Dez' },
+];
 
 interface MonthFilterProps {
   selectedMonth: number | null;
@@ -26,7 +40,7 @@ export function MonthFilter({ selectedMonth, onSelectMonth }: MonthFilterProps) 
         )}
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-12 gap-2">
-        {financialData.map((month, index) => (
+        {MONTHS.map((month, index) => (
           <button
             key={month.month}
             onClick={() => onSelectMonth(selectedMonth === index ? null : index)}
