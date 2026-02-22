@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { PluggyConnect } from "react-pluggy-connect";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { Loader2, RefreshCw, Plus } from "lucide-react";
 import { useRequests } from "@/hooks/use-requests";
 import { OpenFinanceItem, getStatusLabel } from "@/models/OpenFinanceItem";

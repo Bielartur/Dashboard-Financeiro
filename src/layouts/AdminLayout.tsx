@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import { ArrowLeft, Building2, Wallet, LayoutDashboard, ChevronRight } from "lucide-react";
 import { BreadcrumbHeader } from "@/components/shared/BreadcrumbHeader";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 export default function AdminLayout() {
   const location = useLocation();

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { CategorySchema } from "@/models/schemas/CategorySchema";
 import {
   Select,
@@ -52,6 +53,8 @@ export function EditCategoryModal({
       name: "",
       alias: "",
       colorHex: "#000000",
+      isInvestment: false,
+      ignored: false,
     },
   });
 
@@ -61,6 +64,8 @@ export function EditCategoryModal({
         name: category.name,
         alias: category.alias || "",
         colorHex: category.colorHex,
+        isInvestment: category.isInvestment || false,
+        ignored: category.ignored || false,
       });
     }
   }, [category, form]);
@@ -70,19 +75,21 @@ export function EditCategoryModal({
 
     if (mode === 'admin') {
       // Admin saves Name, Type, Color (Global)
-      // We ignore Alias here
+      // We include IsInvestment, Ignored here as GLOBAL defaults
       const payload: CategoryUpdate = {
         name: values.name,
         colorHex: values.colorHex,
+        isInvestment: values.isInvestment,
+        ignored: values.ignored,
       };
       await onSave(category.id, payload);
     } else {
-      // Personal saves Alias, Color (Personal)
-      // Name and Type are ignored (or sent but validation on backend for settings endpoint ignores them)
-      // Actually, the onSave callback in ProfilePage will call updateCategorySettings which expects { alias, colorHex }
+      // Personal saves Alias, Color, IsInvestment, Ignored (Personal)
       const payload: CategorySettingsUpdate = {
         alias: values.alias,
         colorHex: values.colorHex,
+        isInvestment: values.isInvestment,
+        ignored: values.ignored,
       };
       await onSave(category.id, payload);
     }
@@ -181,6 +188,54 @@ export function EditCategoryModal({
               </FormItem>
             )}
           />
+
+          <div className="flex flex-col gap-4">
+            <FormField
+              control={form.control}
+              name="isInvestment"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Investimento</FormLabel>
+                    <div className="text-[0.8rem] text-muted-foreground">
+                      {mode === 'admin'
+                        ? "Padrão global para todos os usuários."
+                        : "Marcar esta categoria como investimento."}
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ignored"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Ignorar no Dashboard</FormLabel>
+                    <div className="text-[0.8rem] text-muted-foreground">
+                      {mode === 'admin'
+                        ? "Padrão global para todos os usuários."
+                        : "Não contabilizar nos totais de Receita/Despesa."}
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} className="w-1/2">
               Cancelar
@@ -197,7 +252,7 @@ export function EditCategoryModal({
             </Button>
           </DialogFooter>
         </form>
-      </Form>
-    </BaseModal>
+      </Form >
+    </BaseModal >
   );
 }

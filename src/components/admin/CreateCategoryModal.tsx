@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,14 +18,8 @@ import { BaseModal } from "./BaseModal";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CategorySchema, CategoryFormValues } from "@/models/schemas/CategorySchema";
+import { Switch } from "@/components/ui/switch";
 
 interface CreateCategoryModalProps {
   isOpen: boolean;
@@ -44,6 +37,8 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
     defaultValues: {
       name: "",
       colorHex: "#000000",
+      isInvestment: false,
+      ignored: false,
     },
   });
 
@@ -53,6 +48,8 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
       await api.createCategory({
         name: values.name,
         colorHex: values.colorHex,
+        isInvestment: values.isInvestment,
+        ignored: values.ignored,
       });
 
       toast({
@@ -64,6 +61,8 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
       form.reset({
         name: "",
         colorHex: values.colorHex,
+        isInvestment: false,
+        ignored: false,
       });
       onClose();
     } catch (error) {
@@ -143,12 +142,55 @@ export function CreateCategoryModal({ isOpen, onClose }: CreateCategoryModalProp
             )}
           />
 
+          <div className="flex flex-col gap-4">
+            <FormField
+              control={form.control}
+              name="isInvestment"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Investimento</FormLabel>
+                    <div className="text-[0.8rem] text-muted-foreground">
+                      Marcar esta categoria como investimento.
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ignored"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <div className="space-y-0.5">
+                    <FormLabel>Ignorar no Dashboard</FormLabel>
+                    <div className="text-[0.8rem] text-muted-foreground">
+                      Não contabilizar nos totais de Receita/Despesa.
+                    </div>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} className="w-1/2" disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" className="w-1/2" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" className="w-1/2" isLoading={isLoading}>
               Cadastrar
             </Button>
           </DialogFooter>
