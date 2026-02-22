@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 
 interface DebouncedSearchInputProps {
   value?: string;

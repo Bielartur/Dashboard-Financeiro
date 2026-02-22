@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,

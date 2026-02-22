@@ -9,6 +9,9 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BASE_URL } from "@/utils/apiRequests";
+
 export const SidebarUserProfile = () => {
   const { user, logout } = useAuth();
 
@@ -17,18 +20,28 @@ export const SidebarUserProfile = () => {
     ? `${user.firstName} ${user.lastName}`
     : 'Usuário';
 
-  // Simple avatar generation based on name
-  const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${displayName}`;
+  const getInitials = (first: string = "", last: string = "") => {
+    return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
+  };
+
+  const getAvatarUrl = (path?: string) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    return `${BASE_URL}${path}`;
+  };
+
+  console.log(user?.profileImageUrl);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 cursor-pointer hover:bg-secondary transition-colors">
-          <img
-            src={avatarUrl}
-            alt={displayName}
-            className="w-10 h-10 rounded-full ring-2 ring-primary/20"
-          />
+          <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+            <AvatarImage src={getAvatarUrl(user?.profileImageUrl)} className="object-cover" />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {user?.firstName ? getInitials(user.firstName, user.lastName) : <UserCircle className="h-6 w-6" />}
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
             <p className="text-xs text-muted-foreground truncate">{user?.email}</p>

@@ -2,8 +2,7 @@ import { BarChart3, ArrowLeftRight, Settings, Crown, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { SidebarMenuItem } from './SidebarMenuItem';
 import { SidebarUserProfile } from './SidebarUserProfile';
-import { ThemeToggle } from '@/components/theme/ThemeToggle';
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { Button } from "@/components/ui/button";
 
 interface SidebarProps {
@@ -76,11 +75,6 @@ export const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
           </div>
         </div>
       </nav>
-
-      {/* Theme Toggle */}
-      <div className="px-4 py-2">
-        <ThemeToggle />
-      </div>
 
       {/* Upgrade Card */}
       <div className="p-4 m-4 mt-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20">
