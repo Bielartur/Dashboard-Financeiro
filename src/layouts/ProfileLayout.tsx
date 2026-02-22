@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { TitlePage } from "@/components/shared/TitlePage";
 
 export function ProfileLayout() {

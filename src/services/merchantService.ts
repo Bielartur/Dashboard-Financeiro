@@ -9,15 +9,15 @@ export const merchantService = {
     return await apiRequest<Merchant[]>(`merchants/search?query=${encodeURIComponent(query)}&limit=${limit}`, "GET");
   },
 
-  getAliases: async (page: number = 1, limit: number = 20) => {
-    return await apiRequest<PaginatedResponse<any>>(`aliases/?page=${page}&size=${limit}`, "GET");
+  getAliases: async (page: number = 1, limit: number = 20, scope: string = "general") => {
+    return await apiRequest<PaginatedResponse<any>>(`aliases/?page=${page}&size=${limit}&scope=${scope}`, "GET");
   },
 
-  searchAliases: async (query: string, page: number = 1, limit: number = 20) => {
-    return await apiRequest<PaginatedResponse<any>>(`aliases/search?query=${encodeURIComponent(query)}&page=${page}&size=${limit}`, "GET");
+  searchAliases: async (query: string, page: number = 1, limit: number = 20, scope: string = "general") => {
+    return await apiRequest<PaginatedResponse<any>>(`aliases/search?query=${encodeURIComponent(query)}&page=${page}&size=${limit}&scope=${scope}`, "GET");
   },
 
-  createAliasGroup: async (payload: { pattern: string; merchant_ids: string[]; category_id?: string | null }) => {
+  createAliasGroup: async (payload: { pattern: string; merchant_ids: string[]; category_id?: string | null; is_investment?: boolean; ignored?: boolean }) => {
     return await apiRequest<any>("aliases/set_group", "POST", payload);
   },
 
@@ -33,7 +33,7 @@ export const merchantService = {
     return await apiRequest<void>(`aliases/${aliasId}/remove/${merchantId}`, "DELETE");
   },
 
-  updateAlias: async (aliasId: string, payload: { pattern?: string; category_id?: string | null }) => {
+  updateAlias: async (aliasId: string, payload: { pattern?: string; category_id?: string | null; is_investment?: boolean; ignored?: boolean; update_past_transactions?: boolean }) => {
     return await apiRequest<any>(`aliases/${aliasId}`, "PUT", payload);
   }
 };

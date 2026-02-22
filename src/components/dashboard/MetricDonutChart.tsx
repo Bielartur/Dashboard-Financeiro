@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import {
   formatCurrency,
   formatPercent,
-} from '@/data/financialData';
+} from '@/utils/utils';
 import { MonthlyData } from '@/models/Financial';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { EmptyDashboardState } from './EmptyDashboardState';
@@ -12,9 +12,10 @@ interface MetricDonutChartProps {
   data: MonthlyData[];
   title?: string;
   type?: 'category' | 'merchant' | 'bank';
+  metricType?: 'expense' | 'income';
 }
 
-export function MetricDonutChart({ selectedMonth, data, title, type = 'category' }: MetricDonutChartProps) {
+export function MetricDonutChart({ selectedMonth, data, title, type = 'category', metricType = 'expense' }: MetricDonutChartProps) {
   // Aggregate data based on selection
   const aggregatedMetrics = useMemo(() => {
     const metricMap = new Map<string, { name: string; value: number; color: string }>();
@@ -24,8 +25,8 @@ export function MetricDonutChart({ selectedMonth, data, title, type = 'category'
     monthsToProcess.forEach(month => {
       if (!month) return;
       month.metrics.forEach(metric => {
-        // Filter for EXPENSES only for the donut chart to make sense
-        if (metric.type !== 'expense') return;
+        // Filter based on selected metric type (expense or income)
+        if (metric.type !== metricType) return;
 
         // Use id as slug since backend returns id (which is slug for categories)
         const slug = metric.id || metric.slug;
@@ -37,7 +38,7 @@ export function MetricDonutChart({ selectedMonth, data, title, type = 'category'
     });
 
     return Array.from(metricMap.values());
-  }, [selectedMonth, data]);
+  }, [selectedMonth, data, metricType]);
 
   const total = aggregatedMetrics.reduce((sum, item) => sum + item.value, 0);
   const hasData = total > 0;
@@ -71,10 +72,11 @@ export function MetricDonutChart({ selectedMonth, data, title, type = 'category'
     if (title) return title;
 
     const suffix = type === 'category' ? 'Categoria' : type === 'merchant' ? 'Estabelecimento' : 'Banco';
+    const prefix = metricType === 'expense' ? 'Despesas' : 'Receitas';
 
     return selectedMonth !== null && data[selectedMonth]
-      ? `Distribuição - ${data[selectedMonth].month}`
-      : `Distribuição Anual por ${suffix}`;
+      ? `${prefix} - ${data[selectedMonth].month}`
+      : `${prefix} Anuais por ${suffix}`;
   };
 
   return (

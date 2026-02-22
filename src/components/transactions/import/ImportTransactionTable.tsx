@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { TransactionImportResponse } from "@/models/Transaction";
 import { getTransactionMethodIcon } from "@/utils/transaction-icons";
-import { formatCurrency } from "@/data/financialData";
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Category } from "@/models/Category";
@@ -18,7 +18,7 @@ import { CategoryCombobox } from "@/components/shared/combobox/CategoryCombobox"
 import { UploadCloud, AlertTriangle } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/utils/utils";
 
 
 interface ImportTransactionTableProps {

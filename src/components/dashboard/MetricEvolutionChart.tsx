@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/command";
 import {
   formatCurrency,
-} from '@/data/financialData';
+} from '@/utils/utils';
 import { MonthlyData } from '@/models/Financial';
 import {
   LineChart,
@@ -30,7 +30,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { TrendingUp, Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { EmptyDashboardState } from './EmptyDashboardState';
 
 interface MetricEvolutionChartProps {
@@ -39,6 +39,7 @@ interface MetricEvolutionChartProps {
   selectedYear: string;
   onSelectMetrics: (metrics: string[]) => void;
   type?: 'category' | 'merchant' | 'bank';
+  metricType?: 'expense' | 'income';
 }
 
 export function MetricEvolutionChart({
@@ -46,7 +47,8 @@ export function MetricEvolutionChart({
   data,
   selectedYear,
   onSelectMetrics,
-  type = 'category'
+  type = 'category',
+  metricType = 'expense'
 }: MetricEvolutionChartProps) {
   const [open, setOpen] = useState(false);
 
@@ -55,6 +57,9 @@ export function MetricEvolutionChart({
     const meta = new Map<string, { name: string; color: string }>();
     data.forEach(month => {
       month.metrics.forEach(metric => {
+        // Filter by metricType
+        if (metric.type !== metricType) return;
+
         const slug = metric.id || metric.slug;
         if (!meta.has(slug)) {
           meta.set(slug, { name: metric.name, color: metric.colorHex });
@@ -62,7 +67,7 @@ export function MetricEvolutionChart({
       });
     });
     return meta;
-  }, [data]);
+  }, [data, metricType]);
 
   const availableMetrics = Array.from(metricMeta.keys());
   const hasData = availableMetrics.length > 0;
@@ -121,10 +126,10 @@ export function MetricEvolutionChart({
 
       filledData.forEach(month => {
         month.metrics?.forEach(metric => {
+          if (metric.type !== metricType) return;
+
           const slug = metric.id || metric.slug;
-          if (metric.type === 'expense') {
-            totals.set(slug, (totals.get(slug) || 0) + Math.abs(Number(metric.total)));
-          }
+          totals.set(slug, (totals.get(slug) || 0) + Math.abs(Number(metric.total)));
         });
       });
 
@@ -137,7 +142,7 @@ export function MetricEvolutionChart({
         onSelectMetrics(topMetrics);
       }
     }
-  }, [filledData, onSelectMetrics]); // Intentionally omitting selectedCategories to avoid fighting user clear action
+  }, [filledData, onSelectMetrics, metricType]); // Intentionally omitting selectedCategories to avoid fighting user clear action
 
   const chartData = useMemo(() => {
     if (selectedMetrics.length === 0) return [];

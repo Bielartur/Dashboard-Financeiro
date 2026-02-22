@@ -36,6 +36,8 @@ export const transactionService = {
       filters.merchantAliasIds.forEach(id => queryParams.append("merchant_alias_ids", id));
     }
 
+    if (filters.type) queryParams.append("type", filters.type);
+
     return await apiRequest<PaginatedResponse<TransactionResponse>>(`transactions/search?${queryParams.toString()}`, "GET");
   },
 

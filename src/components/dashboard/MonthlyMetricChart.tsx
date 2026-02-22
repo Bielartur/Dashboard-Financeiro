@@ -3,7 +3,7 @@ import { formatPeriodLabel } from '@/utils/formatters';
 import { MonthCombobox } from '@/components/shared/combobox/MonthCombobox';
 import {
   formatCurrency,
-} from '@/data/financialData';
+} from '@/utils/utils';
 import { MonthlyData } from '@/models/Financial';
 import {
   BarChart,
@@ -22,6 +22,7 @@ interface MonthlyMetricChartProps {
   selectedYear: string;
   onSelectMonth: (month: number | null) => void;
   type?: 'category' | 'merchant' | 'bank';
+  metricType?: 'expense' | 'income';
 }
 
 interface MetricChartItem {
@@ -36,7 +37,7 @@ interface MetricChartItem {
   status: 'above_average' | 'below_average' | 'average' | 'unknown';
 }
 
-export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelectMonth, type = 'category' }: MonthlyMetricChartProps) {
+export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelectMonth, type = 'category', metricType = 'expense' }: MonthlyMetricChartProps) {
   // Internal state to handle "Annual Report" (-1) without affecting global selectedMonth
   const [internalMonth, setInternalMonth] = useState<number | null>(selectedMonth);
 
@@ -64,11 +65,10 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
   // Check if we have data to show
   const hasData = useMemo(() => {
     if (isAnnualReport) {
-      return data.some(m => m.metrics.length > 0);
+      return data.some(m => m.metrics.some(metric => metric.type === metricType));
     }
-    return internalMonth !== null && data[internalMonth] && data[internalMonth].metrics.length > 0;
-  }, [isAnnualReport, internalMonth, data]);
-
+    return internalMonth !== null && data[internalMonth] && data[internalMonth].metrics.some(metric => metric.type === metricType);
+  }, [isAnnualReport, internalMonth, data, metricType]);
 
   // Build chart data
   const chartData: MetricChartItem[] = useMemo(() => {
@@ -79,8 +79,8 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
 
       data.forEach(month => {
         month.metrics.forEach(metric => {
-          // Usually we show Expenses here
-          if (metric.type !== 'expense') return;
+          // Filter based on selected metric type
+          if (metric.type !== metricType) return;
 
           const slug = metric.id || metric.slug;
           const existing = metricMap.get(slug);
@@ -111,7 +111,7 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
 
     // Convert DashboardMetric[] to ChartItem
     return monthData.metrics
-      .filter(metric => metric.type === 'expense') // Filter for expenses
+      .filter(metric => metric.type === metricType) // Filter based on selected metric type
       .map((metric) => {
         const value = Math.abs(Number(metric.total));
         const average = Math.abs(Number(metric.average));
@@ -131,7 +131,7 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
         };
       })
       .sort((a, b) => b.value - a.value);
-  }, [internalMonth, isAnnualReport, isMonthSelected, data]);
+  }, [internalMonth, isAnnualReport, isMonthSelected, data, metricType]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -161,6 +161,12 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
       const isAbove = diff > 0;
       const isBelow = diff < 0;
 
+      // Adjust text colors based on metric type
+      // For expenses: Above average = Bad (red/expense), Below average = Good (green/income)
+      // For income: Above average = Good (green/income), Below average = Bad (red/expense)
+      const isPositiveTrend = metricType === 'income' ? isAbove : isBelow;
+      const trendColorClass = isPositiveTrend ? 'text-income' : 'text-expense';
+
       return (
         <div className="glass-card rounded-lg p-3 border border-border/50 shadow-xl min-w-[200px]">
           <div className="flex items-center gap-2 mb-2">
@@ -181,9 +187,9 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
             </div>
             <div className="flex justify-between pt-1 border-t border-border/50">
               <span className="text-xs text-muted-foreground">
-                {isAbove ? 'Excesso:' : isBelow ? 'Economia:' : 'Diferença:'}
+                {isAbove ? 'Diferença (+):' : isBelow ? 'Diferença (-):' : 'Diferença:'}
               </span>
-              <span className={`text-xs font-semibold ${isAbove ? 'text-expense' : isBelow ? 'text-income' : 'text-muted-foreground'}`}>
+              <span className={`text-xs font-semibold ${trendColorClass}`}>
                 {formatCurrency(Math.abs(diff))} ({Math.abs(Number(diffPercent))}%)
               </span>
             </div>
@@ -213,17 +219,21 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
     const scale = width / data.value;
     const avgPosition = data.average * scale;
 
+    // Colors adjustment
+    const overflowColor = metricType === 'income' ? "hsl(var(--income))" : "hsl(var(--expense))";
+    const underflowColor = metricType === 'income' ? "hsl(var(--expense))" : "hsl(var(--income))";
+
     return (
       <g>
         {isAbove ? (
           <>
             <rect x={x} y={y} width={avgPosition} height={height} fill={data.fill} rx={0} ry={0} />
-            <rect x={x + avgPosition} y={y} width={width - avgPosition} height={height} fill="hsl(var(--expense))" rx={4} ry={4} />
+            <rect x={x + avgPosition} y={y} width={width - avgPosition} height={height} fill={overflowColor} rx={4} ry={4} />
           </>
         ) : isBelow ? (
           <>
             <rect x={x} y={y} width={width} height={height} fill={data.fill} rx={0} ry={0} />
-            <rect x={x + width} y={y} width={avgPosition - width} height={height} fill="hsl(var(--income))" opacity={0.4} rx={4} ry={4} strokeDasharray="4 2" stroke="hsl(var(--income))" strokeWidth={1} />
+            <rect x={x + width} y={y} width={avgPosition - width} height={height} fill={underflowColor} opacity={0.4} rx={4} ry={4} strokeDasharray="4 2" stroke={underflowColor} strokeWidth={1} />
           </>
         ) : (
           <rect x={x} y={y} width={width} height={height} fill={data.fill} rx={4} ry={4} />
@@ -237,7 +247,8 @@ export function MonthlyMetricChart({ selectedMonth, data, selectedYear, onSelect
 
   const getTitle = () => {
     const suffix = type === 'category' ? 'categoria' : type === 'merchant' ? 'estabelecimento' : 'banco';
-    return isAnnualReport ? `Ranking Anual de Gastos` : `Relatório de gastos por ${suffix}`;
+    const prefix = metricType === 'expense' ? 'de gastos' : 'de receitas';
+    return isAnnualReport ? `Ranking Anual ${prefix}` : `Relatório ${prefix} por ${suffix}`;
   };
 
   return (

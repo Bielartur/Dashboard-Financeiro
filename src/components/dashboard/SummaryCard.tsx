@@ -1,6 +1,6 @@
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/utils/utils';
 import { LucideIcon, Loader2 } from 'lucide-react';
-import { formatCurrency } from '@/data/financialData';
+
 
 interface SummaryCardProps {
   title: string;

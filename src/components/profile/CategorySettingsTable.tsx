@@ -12,11 +12,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Removed Input import as it is now inside DebouncedSearchInput
-import { Pencil, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
 import { EditCategoryModal } from "@/components/admin/EditCategoryModal";
 import { toast } from "sonner";
 import { DebouncedSearchInput } from "@/components/shared/DebouncedSearchInput";
+import { BooleanLabel } from "../shared/BooleanLabel";
 
 export function CategorySettingsTable() {
   const api = useRequests();
@@ -25,15 +27,16 @@ export function CategorySettingsTable() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [scope, setScope] = useState<"general" | "investment" | "ignored">("general");
 
-  // Reset page when search changes
+  // Reset page when search or scope changes
   useEffect(() => {
     setPage(1);
-  }, [searchQuery]);
+  }, [searchQuery, scope]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["categories", searchQuery, page],
-    queryFn: () => api.searchCategories(searchQuery, page, 10),
+    queryKey: ["categories", searchQuery, page, scope],
+    queryFn: () => api.searchCategories(searchQuery, page, 10, scope),
     placeholderData: (previousData) => previousData,
   });
 
@@ -53,16 +56,10 @@ export function CategorySettingsTable() {
     }
   };
 
-  const handleNextPage = () => {
-    if (page < totalPages) setPage((p) => p + 1);
-  };
-
-  const handlePrevPage = () => {
-    if (page > 1) setPage((p) => p - 1);
-  };
-
   return (
     <div className="space-y-4">
+      {/* <span className="text-foreground font-semibold">Tipos de categorias</span> */}
+
       <div className="relative">
         <DebouncedSearchInput
           placeholder="Buscar categorias..."
@@ -71,6 +68,14 @@ export function CategorySettingsTable() {
           className="w-full"
         />
       </div>
+      
+      <Tabs defaultValue="general" value={scope} onValueChange={(v) => setScope(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="general">Gerais</TabsTrigger>
+          <TabsTrigger value="investment">Investimentos</TabsTrigger>
+          <TabsTrigger value="ignored">Ignoradas no Dashboard</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <div className="rounded-md border h-[60vh] overflow-y-auto relative flex flex-col justify-between">
         <Table>
@@ -79,13 +84,15 @@ export function CategorySettingsTable() {
               <TableHead>Cor</TableHead>
               <TableHead>Nome Original</TableHead>
               <TableHead>Apelido (Seu)</TableHead>
+              <TableHead className="text-center w-[100px]">Investimento?</TableHead>
+              <TableHead className="text-center w-[100px]">Ignorado?</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-[52vh] text-center">
+                <TableCell colSpan={6} className="h-[52vh] text-center">
                   <div className="flex justify-center items-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
@@ -93,7 +100,7 @@ export function CategorySettingsTable() {
               </TableRow>
             ) : categories.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-[52vh] text-center">
+                <TableCell colSpan={6} className="h-[52vh] text-center">
                   Nenhuma categoria encontrada.
                 </TableCell>
               </TableRow>
@@ -114,7 +121,12 @@ export function CategorySettingsTable() {
                       <span className="italic text-muted-foreground opacity-50">Sem apelido</span>
                     )}
                   </TableCell>
-
+                  <TableCell className="text-center">
+                    <BooleanLabel check={category.isInvestment} />
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <BooleanLabel check={category.ignored} />
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"

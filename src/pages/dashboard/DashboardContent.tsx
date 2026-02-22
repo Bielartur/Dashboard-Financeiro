@@ -14,7 +14,8 @@ export default function DashboardContent() {
     selectedMetrics,
     onSelectMonth,
     onSelectMetrics,
-    groupBy
+    groupBy,
+    viewType
   } = useOutletContext<DashboardContextType>();
 
   return (
@@ -26,6 +27,7 @@ export default function DashboardContent() {
           selectedMonth={selectedMonth}
           data={monthsData}
           type={groupBy}
+          metricType={viewType}
         />
       </div>
 
@@ -36,6 +38,7 @@ export default function DashboardContent() {
         selectedYear={selectedYear}
         onSelectMonth={onSelectMonth}
         type={groupBy}
+        metricType={viewType}
       />
 
       {/* Category Annual Evolution */}
@@ -45,6 +48,7 @@ export default function DashboardContent() {
         selectedYear={selectedYear}
         onSelectMetrics={onSelectMetrics}
         type={groupBy}
+        metricType={viewType}
       />
 
       {/* CategoryTable */}
@@ -53,6 +57,7 @@ export default function DashboardContent() {
         data={monthsData}
         selectedYear={selectedYear}
         type={groupBy}
+        metricType={viewType}
       />
     </div>
   );

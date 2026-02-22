@@ -4,8 +4,8 @@ import { Category, CategoryCreate, CategoryUpdate } from "@/models/Category";
 import { PaginatedResponse } from "@/models/Pagination";
 
 export const categoryService = {
-  getAll: async () => {
-    return await apiRequest<Category[]>("categories/", "GET");
+  getAll: async (view: 'user' | 'global' = 'user') => {
+    return await apiRequest<Category[]>(`categories/?view=${view}`, "GET");
   },
 
   create: async (payload: CategoryCreate) => {
@@ -20,11 +20,11 @@ export const categoryService = {
     return await apiRequest<void>(`categories/${id}`, "DELETE");
   },
 
-  search: async (query: string, page: number = 1, limit: number = 12) => {
-    return await apiRequest<PaginatedResponse<Category>>(`categories/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, "GET");
+  search: async (query: string, page: number = 1, limit: number = 12, scope: string = "general") => {
+    return await apiRequest<PaginatedResponse<Category>>(`categories/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}&scope=${scope}`, "GET");
   },
 
-  updateSettings: async (id: string, payload: { alias?: string; colorHex?: string }) => {
+  updateSettings: async (id: string, payload: { alias?: string; colorHex?: string, isInvestment?: boolean, ignored?: boolean }) => {
     return await apiRequest<Category>(`categories/${id}/settings`, "PUT", payload as unknown as Record<string, unknown>);
   }
 };

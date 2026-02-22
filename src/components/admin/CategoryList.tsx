@@ -8,14 +8,15 @@ import { EditCategoryModal } from "./EditCategoryModal";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 import { toast } from "sonner";
+import { BooleanLabel } from "../shared/BooleanLabel";
 
 
 export function CategoryList() {
   const api = useRequests();
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
-    queryKey: ["categories"],
-    queryFn: api.getCategories,
+    queryKey: ["categories", "global"],
+    queryFn: () => api.getCategories('global'),
   });
 
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -29,17 +30,18 @@ export function CategoryList() {
 
   const handleSave = async (id: string, data: any) => {
     try {
-      // Update Global Data (Name)
-      await api.updateCategory(id, { name: data.name });
-
-      // Update User Settings (Alias, Color)
-      if (data.alias || data.colorHex) {
-        await api.updateCategorySettings(id, { alias: data.alias, colorHex: data.colorHex });
-      }
+      // In Admin/CategoryList, we are always in Global mode.
+      // We update the Category entity directly.
+      await api.updateCategory(id, {
+        name: data.name,
+        colorHex: data.colorHex,
+        isInvestment: data.isInvestment,
+        ignored: data.ignored
+      });
 
       await queryClient.invalidateQueries({ queryKey: ["categories"] });
-      await queryClient.invalidateQueries({ queryKey: ["dashboard"] }); // Refresh dashboard too as colors/names change
-      toast.success("Categoria atualizada com sucesso!");
+      await queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Categoria global atualizada com sucesso!");
     } catch (error) {
       console.error("Failed to update category:", error);
       toast.error("Erro ao atualizar categoria.");
@@ -89,6 +91,20 @@ export function CategoryList() {
       className: "w-[420px]",
       cellClassName: "font-medium text-foreground",
       cell: (category) => <CategoryBadge category={category} />
+    },
+    {
+      header: "Investimento",
+      accessorKey: "isInvestment",
+      className: "w-[120px] text-center",
+      cellClassName: "text-center",
+      cell: (category) => <BooleanLabel check={category.isInvestment} />
+    },
+    {
+      header: "Ignorado",
+      accessorKey: "ignored",
+      className: "w-[120px] text-center",
+      cellClassName: "text-center",
+      cell: (category) => <BooleanLabel check={category.ignored} />
     },
   ];
 

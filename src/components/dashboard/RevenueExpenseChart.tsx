@@ -1,4 +1,4 @@
-import { formatCurrency } from '@/data/financialData';
+import { formatCurrency } from '@/utils/utils';
 import { MonthlyData } from '@/models/Financial';
 import { useMemo } from 'react';
 import {

@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -30,7 +30,7 @@ import { Category } from "@/models/Category";
 import { Bank } from "@/models/Bank";
 import { Merchant } from "@/models/Merchant";
 import { BaseModal } from "@/components/admin/BaseModal";
-import { MerchantSelect } from "./MerchantSelect";
+import { MerchantSelect } from "@/components/transactions/MerchantSelect";
 import { CategoryCombobox } from "@/components/shared/combobox/CategoryCombobox";
 import { BankCombobox } from "@/components/shared/combobox/BankCombobox";
 import { TransactionMethodCombobox } from "@/components/shared/combobox/TransactionMethodCombobox";
@@ -84,7 +84,7 @@ export function CreateTransactionModal({ isOpen, onClose, onSuccess }: CreateTra
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: api.getCategories,
+    queryFn: () => api.getCategories(),
     enabled: isOpen,
   });
 

@@ -1,7 +1,7 @@
 import { Calendar as CalendarIcon, Filter } from "lucide-react";
 import { ClearFilterButton } from "@/components/shared/ClearFilterButton";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { TransactionMethodCombobox } from "@/components/shared/combobox/TransactionMethodCombobox";
@@ -41,7 +41,7 @@ export function FilterTransactions({
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["categories"],
-    queryFn: api.getCategories,
+    queryFn: () => api.getCategories(),
   });
 
   const { data: banks = [] } = useQuery<Bank[]>({
